@@ -1,0 +1,21 @@
+name: digia_inspector
+description: A debug console for Digia apps, providing real-time logging of network requests, actions, and states.
+version: 0.0.1
+publish_to: none
+
+environment:
+  sdk: ^3.8.0
+  flutter: ^3.32.0
+
+dependencies:
+  digia_inspector_core:
+    path: ../digia_inspector_core
+  dio: ^5.4.0
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  mocktail: ^1.0.4
+  very_good_analysis: ^9.0.0
