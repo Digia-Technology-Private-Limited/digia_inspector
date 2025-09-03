@@ -16,7 +16,7 @@ class NetworkRequestViewer extends StatefulWidget {
   });
 
   /// The network log event to display.
-  final LogEvent log;
+  final DigiaLogEvent log;
 
   @override
   State<NetworkRequestViewer> createState() => _NetworkRequestViewerState();
@@ -41,7 +41,7 @@ class _NetworkRequestViewerState extends State<NetworkRequestViewer>
   int _getTabCount() {
     if (widget.log is NetworkErrorLog) {
       return 2; // Request + Error
-    } else if (widget.log is ResponseLog) {
+    } else if (widget.log is NetworkResponseLog) {
       return 3; // Request + Response + Headers
     } else {
       return 2; // Request + Headers
@@ -109,13 +109,13 @@ class _NetworkRequestViewerState extends State<NetworkRequestViewer>
   Widget _buildTabs() {
     final tabs = <Tab>[];
 
-    if (widget.log is RequestLog ||
-        widget.log is ResponseLog ||
+    if (widget.log is NetworkRequestLog ||
+        widget.log is NetworkResponseLog ||
         widget.log is NetworkErrorLog) {
       tabs.add(const Tab(text: 'Request'));
     }
 
-    if (widget.log is ResponseLog) {
+    if (widget.log is NetworkResponseLog) {
       tabs.add(const Tab(text: 'Response'));
     }
 
@@ -137,13 +137,13 @@ class _NetworkRequestViewerState extends State<NetworkRequestViewer>
   Widget _buildTabContent() {
     final views = <Widget>[];
 
-    if (widget.log is RequestLog ||
-        widget.log is ResponseLog ||
+    if (widget.log is NetworkRequestLog ||
+        widget.log is NetworkResponseLog ||
         widget.log is NetworkErrorLog) {
       views.add(_buildRequestTab());
     }
 
-    if (widget.log is ResponseLog) {
+    if (widget.log is NetworkResponseLog) {
       views.add(_buildResponseTab());
     }
 
@@ -198,11 +198,11 @@ class _NetworkRequestViewerState extends State<NetworkRequestViewer>
   }
 
   Widget _buildResponseTab() {
-    if (widget.log is! ResponseLog) {
+    if (widget.log is! NetworkResponseLog) {
       return const Center(child: Text('No response data'));
     }
 
-    final responseLog = widget.log as ResponseLog;
+    final responseLog = widget.log as NetworkResponseLog;
     final metadata = responseLog.metadata;
     final statusCode = metadata['statusCode'] as int? ?? 0;
     final headers = metadata['headers'] as Map<String, dynamic>? ?? {};
@@ -455,8 +455,8 @@ class _NetworkRequestViewerState extends State<NetworkRequestViewer>
   IconData _getIconForLogType() {
     if (widget.log is NetworkErrorLog) {
       return Icons.error;
-    } else if (widget.log is ResponseLog) {
-      final statusCode = (widget.log as ResponseLog).statusCode;
+    } else if (widget.log is NetworkResponseLog) {
+      final statusCode = (widget.log as NetworkResponseLog).statusCode;
       if (statusCode >= 200 && statusCode < 300) {
         return Icons.check_circle;
       } else if (statusCode >= 400) {
@@ -472,8 +472,8 @@ class _NetworkRequestViewerState extends State<NetworkRequestViewer>
   Color _getColorForLogType() {
     if (widget.log is NetworkErrorLog) {
       return Colors.red;
-    } else if (widget.log is ResponseLog) {
-      final statusCode = (widget.log as ResponseLog).statusCode;
+    } else if (widget.log is NetworkResponseLog) {
+      final statusCode = (widget.log as NetworkResponseLog).statusCode;
       if (statusCode >= 200 && statusCode < 300) {
         return Colors.green;
       } else if (statusCode >= 400) {

@@ -1,111 +1,56 @@
 import 'dart:convert';
 
+import 'package:digia_inspector/src/models/network_log_entry.dart';
+import 'package:digia_inspector/src/state/inspector_controller.dart';
 import 'package:digia_inspector_core/digia_inspector_core.dart';
 import 'package:dio/dio.dart';
 
 /// Dio interceptor that captures network requests and responses for debugging.
 ///
-/// This interceptor logs all network activity passing through Dio to the
-/// configured DigiaLogger using RequestLog, ResponseLog, and NetworkErrorLog events.
+/// This interceptor creates unified [NetworkLogEntry] instances that integrate
+/// directly with the [InspectorController], providing Chrome DevTools-like
+/// experience with loading states that transition to completed/failed states.
+///
+/// The interceptor correlates requests and responses using URL and method
+/// matching, eliminating the need for separate request ID tracking.
 ///
 /// Example usage:
 /// ```dart
 /// final dio = Dio();
 /// final controller = InspectorController();
-/// dio.interceptors.add(DigiaDioInterceptor(controller));
+/// dio.interceptors.add(DigiaDioInterceptor(controller: controller));
 /// ```
-class DigiaDioInterceptor extends Interceptor {
-  /// Creates a new Dio interceptor with the specified logger.
-  DigiaDioInterceptor(this._logger);
+class DigiaDioInterceptorImpl extends Interceptor
+    implements DigiaDioInterceptor {
+  /// Creates a new Dio interceptor with the specified inspector controller.
+  DigiaDioInterceptorImpl({required InspectorController controller})
+    : _controller = controller;
 
-  /// The logger to send network events to.
-  final DigiaLogger _logger;
+  /// The inspector controller to log network entries to.
+  final InspectorController _controller;
 
-  /// Map to track request/response correlation.
-  final Map<RequestOptions, String> _requestIds = {};
+  /// Map to track request timing information.
+  final Map<RequestOptions, DateTime> _requestTimes = {};
 
-  @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    // Set start time for duration calculation
-    options.extra['start_time'] = DateTime.now();
-
-    final request = _createRequestLog(options);
-    _requestIds[options] = request.id;
-    _logger.log(request);
-
-    handler.next(options);
-  }
-
-  @override
-  void onResponse(
-    Response<dynamic> response,
-    ResponseInterceptorHandler handler,
-  ) {
-    final requestId = _requestIds.remove(response.requestOptions);
-    if (requestId != null) {
-      final responseLog = _createResponseLog(response, requestId);
-      _logger.log(responseLog);
-    }
-
-    handler.next(response);
-  }
-
-  @override
-  void onError(DioException err, ErrorInterceptorHandler handler) {
-    final requestId = _requestIds.remove(err.requestOptions);
-    final errorLog = _createNetworkErrorLog(err, requestId);
-    _logger.log(errorLog);
-
-    handler.next(err);
-  }
-
-  /// Creates a RequestLog from Dio RequestOptions.
-  RequestLog _createRequestLog(RequestOptions options) {
-    return RequestLog(
-      method: options.method,
-      url: options.uri,
-      headers: _sanitizeHeaders(options.headers),
-      body: _sanitizeBody(options.data),
-      requestSize: _calculateSize(options.data),
-      tags: {'dio'},
-    );
-  }
-
-  /// Creates a ResponseLog from Dio Response.
-  ResponseLog _createResponseLog(Response<dynamic> response, String requestId) {
-    final requestTime =
-        response.requestOptions.extra['start_time'] as DateTime?;
-    final duration = requestTime != null
-        ? DateTime.now().difference(requestTime)
-        : null;
-
-    return ResponseLog(
-      requestId: requestId,
-      statusCode: response.statusCode ?? 0,
-      headers: _sanitizeHeaders(response.headers.map),
-      body: _sanitizeBody(response.data),
-      responseSize: _calculateSize(response.data),
-      duration: duration,
-      tags: {'dio'},
-    );
-  }
-
-  /// Creates a NetworkErrorLog from DioException.
-  NetworkErrorLog _createNetworkErrorLog(
-    DioException error,
+  /// Creates a unified NetworkLogEntry from Dio RequestOptions.
+  UnifiedNetworkLog _createNetworkLogEntry(
+    RequestOptions options, {
     String? requestId,
-  ) {
-    return NetworkErrorLog(
-      requestId: requestId,
-      error: error,
-      stackTrace: error.stackTrace,
-      errorContext: {
-        'type': error.type.toString(),
-        'message': error.message,
-        'response': error.response?.data,
-        'statusCode': error.response?.statusCode,
-      },
-      tags: {'dio', 'error'},
+  }) {
+    // Extract API name and ID from request options extra field
+    final apiName = options.extra['apiName'] as String?;
+    final apiId = options.extra['apiId'] as String?;
+
+    return createNetworkLogEntry(
+      method: options.method,
+      url: options.uri.toString(),
+      requestHeaders: _sanitizeHeaders(options.headers),
+      requestBody: _sanitizeBody(options.data),
+      queryParameters: options.queryParameters.isNotEmpty
+          ? Map<String, dynamic>.from(options.queryParameters)
+          : null,
+      apiName: apiName,
+      apiId: apiId,
     );
   }
 
@@ -174,20 +119,117 @@ class DigiaDioInterceptor extends Interceptor {
     return sensitive.any((s) => headerName.contains(s));
   }
 
-  /// Calculates the approximate size of data in bytes.
-  int? _calculateSize(dynamic data) {
-    if (data == null) return null;
-
-    try {
-      if (data is String) {
-        return data.length;
-      } else if (data is Map || data is List) {
-        return jsonEncode(data).length;
-      } else {
-        return data.toString().length;
-      }
-    } catch (_) {
-      return null;
+  /// Formats a DioException into a readable error message.
+  String _formatDioError(DioException error) {
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+        return 'Connection timeout';
+      case DioExceptionType.sendTimeout:
+        return 'Send timeout';
+      case DioExceptionType.receiveTimeout:
+        return 'Receive timeout';
+      case DioExceptionType.badResponse:
+        return 'Bad response: ${error.response?.statusCode ?? 'Unknown'}';
+      case DioExceptionType.cancel:
+        return 'Request cancelled';
+      case DioExceptionType.connectionError:
+        return 'Connection error: ${error.message ?? 'Unknown'}';
+      case DioExceptionType.badCertificate:
+        return 'Bad certificate';
+      case DioExceptionType.unknown:
+        return 'Unknown error: ${error.message ?? 'No message'}';
     }
   }
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    // Generate a unique request ID
+    final id = DateTime.now().microsecondsSinceEpoch.toString();
+    options.extra['digiaRequestId'] = id;
+
+    // Create and log pending network entry with request ID
+    final networkEntry = _createNetworkLogEntry(options, requestId: id);
+    _controller.logEntry(networkEntry);
+
+    // Track request timing
+    _requestTimes[options] = DateTime.now();
+
+    handler.next(options);
+  }
+
+  @override
+  void onResponse(
+    Response<dynamic> response,
+    ResponseInterceptorHandler handler,
+  ) {
+    final requestTime = _requestTimes.remove(response.requestOptions);
+    final requestId =
+        response.requestOptions.extra['digiaRequestId'] as String?;
+
+    // Find the corresponding network entry by request ID
+    final networkEntry = _controller.findNetworkEntryByRequestId(requestId);
+
+    if (networkEntry != null) {
+      // Create response log
+      final responseLog = NetworkResponseLog(
+        statusCode: response.statusCode ?? 200,
+        headers: _sanitizeHeaders(response.headers.map),
+        body: _sanitizeBody(response.data),
+        duration: requestTime != null
+            ? DateTime.now().difference(requestTime)
+            : null,
+        requestId: networkEntry.requestId,
+      );
+
+      // Update entry with response data using immutable pattern
+      final updatedEntry = networkEntry.withResponse(responseLog);
+      _controller.updateLogEntry(networkEntry, updatedEntry);
+
+      // Notify UI of the state change
+      _controller.notifyEntryUpdated();
+    }
+
+    handler.next(response);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    final requestTime = _requestTimes.remove(err.requestOptions);
+    final requestId = err.requestOptions.extra['digiaRequestId'] as String?;
+
+    // Find the corresponding network entry by request ID
+    final networkEntry = _controller.findNetworkEntryByRequestId(requestId);
+
+    if (networkEntry != null) {
+      // Create error log
+      final errorLog = NetworkErrorLog(
+        error: _formatDioError(err),
+        requestId: networkEntry.requestId,
+        failedUrl: err.requestOptions.uri.toString(),
+        failedMethod: err.requestOptions.method,
+        stackTrace: err.stackTrace,
+        errorContext: {
+          'type': err.type.toString(),
+          if (err.response?.statusCode != null)
+            'statusCode': err.response!.statusCode,
+          if (err.response?.headers.map != null)
+            'responseHeaders': _sanitizeHeaders(err.response!.headers.map),
+          if (err.response?.data != null)
+            'responseBody': _sanitizeBody(err.response!.data),
+        },
+      );
+
+      // Update entry with error data using immutable pattern
+      final updatedEntry = networkEntry.withError(errorLog);
+      _controller.updateLogEntry(networkEntry, updatedEntry);
+
+      // Notify UI of the state change
+      _controller.notifyEntryUpdated();
+    }
+
+    handler.next(err);
+  }
+
+  @override
+  Interceptor get interceptor => this;
 }

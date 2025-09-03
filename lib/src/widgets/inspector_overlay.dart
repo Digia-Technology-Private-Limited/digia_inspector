@@ -1,5 +1,5 @@
 import 'package:digia_inspector/src/state/inspector_controller.dart';
-import 'package:digia_inspector/src/widgets/log_console.dart';
+import 'package:digia_inspector/src/widgets/inspector_dashboard.dart';
 import 'package:flutter/material.dart';
 
 /// A draggable floating overlay that provides access to the debugging inspector.
@@ -45,7 +45,10 @@ class _InspectorOverlayState extends State<InspectorOverlay> {
         // Debug console overlay
         if (widget.controller.isVisible)
           Positioned.fill(
-            child: LogConsole(controller: widget.controller),
+            child: InspectorDashboard(
+              controller: widget.controller,
+              onClose: () => widget.controller.hide(),
+            ),
           ),
 
         // Floating debug button

@@ -153,6 +153,6 @@ mixin InspectorMixin<T extends StatefulWidget> on State<T> {
 
   /// Logs an application error to the inspector.
   void logException(Object error, {StackTrace? stackTrace, String? source}) {
-    inspector?.logError(error, stackTrace: stackTrace, source: source);
+    inspector?.logError(error, stackTrace: stackTrace, context: source);
   }
 }
