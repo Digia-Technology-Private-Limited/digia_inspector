@@ -11,11 +11,15 @@ import 'package:flutter/services.dart';
 /// Bottom sheet showing detailed action flow information
 class ActionDetailBottomSheet extends StatefulWidget {
   const ActionDetailBottomSheet({
-    super.key,
     required this.flow,
+    super.key,
+    this.isWebView = false,
+    this.onClose,
   });
 
   final ActionFlowUIEntry flow;
+  final bool isWebView;
+  final VoidCallback? onClose;
 
   @override
   State<ActionDetailBottomSheet> createState() =>
@@ -25,6 +29,20 @@ class ActionDetailBottomSheet extends StatefulWidget {
 class _ActionDetailBottomSheetState extends State<ActionDetailBottomSheet> {
   @override
   Widget build(BuildContext context) {
+    if (widget.isWebView) {
+      return Container(
+        decoration: const BoxDecoration(
+          color: InspectorColors.surfaceElevated,
+        ),
+        child: Column(
+          children: [
+            _buildHeader(),
+            Expanded(child: _buildContent()),
+          ],
+        ),
+      );
+    }
+
     final mediaQuery = MediaQuery.of(context);
     final maxHeight = mediaQuery.size.height * 0.9;
 
@@ -105,7 +123,13 @@ class _ActionDetailBottomSheetState extends State<ActionDetailBottomSheet> {
             ),
           ),
           IconButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              if (widget.isWebView) {
+                widget.onClose?.call();
+              } else {
+                Navigator.of(context).pop();
+              }
+            },
             icon: const Icon(
               Icons.close,
               color: InspectorColors.contentSecondary,

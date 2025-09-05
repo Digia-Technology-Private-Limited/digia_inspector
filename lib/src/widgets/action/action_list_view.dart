@@ -15,12 +15,14 @@ class ActionListView extends StatefulWidget {
     this.searchQuery = '',
     this.statusFilter = ActionStatusFilter.all,
     this.onClearLogs,
+    this.onItemTap,
   });
 
   final List<ActionFlowUIEntry> actionFlows;
   final String searchQuery;
   final ActionStatusFilter statusFilter;
   final VoidCallback? onClearLogs;
+  final ValueChanged<ActionFlowUIEntry>? onItemTap;
 
   @override
   State<ActionListView> createState() => _ActionListViewState();
@@ -61,7 +63,13 @@ class _ActionListViewState extends State<ActionListView> {
         final flow = flows[index];
         return ActionFlowListItem(
           flow: flow,
-          onTap: () => _showActionDetail(flow),
+          onTap: () {
+            if (widget.onItemTap != null) {
+              widget.onItemTap!(flow);
+            } else {
+              _showActionDetail(flow);
+            }
+          },
         );
       },
     );

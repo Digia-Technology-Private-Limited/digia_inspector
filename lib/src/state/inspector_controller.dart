@@ -1,11 +1,7 @@
 import 'dart:async';
 
 import 'package:digia_inspector/src/interceptors/digia_dio_interceptor.dart';
-import 'package:digia_inspector/src/models/error_log_entry.dart';
-import 'package:digia_inspector/src/models/log_event_type.dart';
 import 'package:digia_inspector/src/models/network_log_ui_entry.dart';
-import 'package:digia_inspector/src/models/plain_log_entry.dart';
-import 'package:digia_inspector/src/models/state_log_entry.dart';
 import 'package:digia_inspector/src/state/action_log_manager.dart';
 import 'package:digia_inspector/src/state/network_log_manager.dart';
 import 'package:digia_inspector_core/digia_inspector_core.dart';
@@ -88,9 +84,6 @@ class InspectorController extends ChangeNotifier
   /// Current log level filter (not used in new system).
   LogLevel? get levelFilter => null;
 
-  /// Current entry type filter (not used in new system).
-  LogEventType? get entryTypeFilter => null;
-
   /// Whether the inspector is currently visible.
   bool get isVisible => _isVisible;
 
@@ -99,17 +92,6 @@ class InspectorController extends ChangeNotifier
 
   /// Number of filtered log entries.
   int get filteredCount => allLogs.length;
-
-  /// Number of error entries.
-  int get errorCount =>
-      _otherLogs.whereType<ErrorLogEntry>().length +
-      _networkLogManager.errorCount;
-
-  /// Number of warning entries.
-  int get warningCount => _otherLogs
-      .whereType<PlainLogEntry>()
-      .where((l) => l.level == LogLevel.warning)
-      .length;
 
   /// Number of network entries.
   int get networkCount => _networkLogManager.totalCount;
@@ -122,20 +104,6 @@ class InspectorController extends ChangeNotifier
 
   /// Number of action flow entries.
   int get actionFlowCount => _actionLogManager.flowCount;
-
-  /// Number of state entries.
-  int get stateCount => _otherLogs.whereType<StateLogEntry>().length;
-
-  /// Available entry types from all logs for filtering.
-  List<LogEventType> get availableEntryTypes {
-    // For now, return basic types
-    return [
-      LogEventType.httpRequest,
-      LogEventType.error,
-      LogEventType.action,
-      LogEventType.state,
-    ];
-  }
 
   @override
   DigiaDioInterceptor? get dioInterceptor {
@@ -206,12 +174,6 @@ class InspectorController extends ChangeNotifier
 
   /// Sets the log level filter (not used in new system).
   void setLevelFilter(LogLevel? level) {
-    // Not implemented in new system
-    notifyListeners();
-  }
-
-  /// Sets the entry type filter (not used in new system).
-  void setEntryTypeFilter(LogEventType? entryType) {
     // Not implemented in new system
     notifyListeners();
   }
@@ -352,70 +314,6 @@ class InspectorController extends ChangeNotifier
     super.dispose();
   }
 
-  // Convenience methods for creating specific log entry types
-
-  /// Logs a plain message.
-  void logMessage(
-    String message, {
-    LogLevel level = LogLevel.info,
-    String? category,
-  }) {
-    logEntry(
-      PlainLogEntry(
-        message: message,
-        level: level,
-        category: category,
-      ),
-    );
-  }
-
-  /// Logs an application error.
-  void logError(
-    Object error, {
-    StackTrace? stackTrace,
-    String? context,
-    ErrorSeverity severity = ErrorSeverity.error,
-  }) {
-    logEntry(
-      ErrorLogEntry(
-        error: error,
-        stackTrace: stackTrace,
-        context: context,
-        severity: severity,
-      ),
-    );
-  }
-
-  /// Logs a user action.
-  void logAction(
-    String action,
-    String target, {
-    Map<String, dynamic>? parameters,
-    String? userId,
-  }) {
-    // Simplified for now - just log as plain entry
-    logMessage('Action: $action on $target', level: LogLevel.info);
-  }
-
-  /// Logs a state change.
-  void logState(
-    String stateName,
-    String changeType, {
-    dynamic oldValue,
-    dynamic newValue,
-    String? context,
-  }) {
-    logEntry(
-      StateLogEntry(
-        stateName: stateName,
-        changeType: changeType,
-        oldValue: oldValue,
-        newValue: newValue,
-        context: context,
-      ),
-    );
-  }
-
   // DigiaLogger interface implementation
 
   @override
@@ -454,24 +352,12 @@ class InspectorController extends ChangeNotifier
 
     // Also add to general log stream for backwards compatibility
     logEntry(event);
-
-    // Log a simple message for debugging
-    logMessage('Action Started: ${event.actionType}', level: LogLevel.info);
   }
 
   @override
   void onActionProgress(ActionLog event) {
     // Update existing action with progress information
     _actionLogManager.updateActionLog(event);
-
-    // Log progress message
-    final progressInfo = event.progressData != null
-        ? ' (${event.progressData})'
-        : '';
-    logMessage(
-      'Action Progress: ${event.actionType}$progressInfo',
-      level: LogLevel.debug,
-    );
   }
 
   @override
@@ -481,16 +367,6 @@ class InspectorController extends ChangeNotifier
 
     // Also add to general log stream
     logEntry(event);
-
-    // Log completion with timing if available
-    final timing = event.executionTime != null
-        ? ' in ${event.executionTime!.inMilliseconds}ms'
-        : '';
-    final status = event.isFailed ? 'Failed' : 'Completed';
-    logMessage(
-      'Action $status: ${event.actionType}$timing',
-      level: event.isFailed ? LogLevel.error : LogLevel.info,
-    );
   }
 
   @override
@@ -500,8 +376,5 @@ class InspectorController extends ChangeNotifier
 
     // Also add to general log stream
     logEntry(event);
-
-    // Log disabled message
-    logMessage('Action Disabled: ${event.actionType}', level: LogLevel.warning);
   }
 }

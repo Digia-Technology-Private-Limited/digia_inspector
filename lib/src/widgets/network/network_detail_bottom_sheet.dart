@@ -1,18 +1,19 @@
 import 'package:digia_inspector/src/models/network_log_ui_entry.dart';
 import 'package:digia_inspector/src/theme_system.dart';
-import 'package:digia_inspector/src/utils/extensions.dart';
-import 'package:digia_inspector/src/utils/network_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 /// Bottom sheet for displaying detailed network request information
 class NetworkDetailBottomSheet extends StatefulWidget {
-  final NetworkLogUIEntry log;
-
   const NetworkDetailBottomSheet({
-    super.key,
     required this.log,
+    super.key,
+    this.isWebView = false,
+    this.onClose,
   });
+
+  final NetworkLogUIEntry log;
+  final bool isWebView;
+  final VoidCallback? onClose;
 
   @override
   State<NetworkDetailBottomSheet> createState() =>
@@ -38,6 +39,30 @@ class _NetworkDetailBottomSheetState extends State<NetworkDetailBottomSheet>
 
   @override
   Widget build(BuildContext context) {
+    if (widget.isWebView) {
+      return Container(
+        decoration: const BoxDecoration(
+          color: InspectorColors.surfaceElevated,
+        ),
+        child: Column(
+          children: [
+            _buildHeader(),
+            _buildTabBar(),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildHeadersTab(null),
+                  if (widget.log.method.hasRequestBody) _buildPayloadTab(null),
+                  _buildResponseTab(null),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return DraggableScrollableSheet(
       initialChildSize: 0.8,
       minChildSize: 0.5,
@@ -88,15 +113,16 @@ class _NetworkDetailBottomSheetState extends State<NetworkDetailBottomSheet>
       ),
       child: Column(
         children: [
-          // Drag handle
-          Container(
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: InspectorColors.contentTertiary,
-              borderRadius: BorderRadius.circular(2),
+          // Drag handle (hidden on web view)
+          if (!widget.isWebView)
+            Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: InspectorColors.contentTertiary,
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
-          ),
           const SizedBox(height: InspectorSpacing.md),
           // Title row
           Row(
@@ -121,7 +147,13 @@ class _NetworkDetailBottomSheetState extends State<NetworkDetailBottomSheet>
                 ),
               ),
               IconButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  if (widget.isWebView) {
+                    widget.onClose?.call();
+                  } else {
+                    Navigator.pop(context);
+                  }
+                },
                 icon: const Icon(
                   Icons.close,
                   color: InspectorColors.contentSecondary,
@@ -138,6 +170,7 @@ class _NetworkDetailBottomSheetState extends State<NetworkDetailBottomSheet>
     final showPayload = widget.log.method.hasRequestBody;
 
     return Container(
+      padding: InspectorSpacing.paddingMD,
       decoration: const BoxDecoration(
         border: Border(
           bottom: BorderSide(
@@ -163,7 +196,7 @@ class _NetworkDetailBottomSheetState extends State<NetworkDetailBottomSheet>
     );
   }
 
-  Widget _buildHeadersTab(ScrollController scrollController) {
+  Widget _buildHeadersTab(ScrollController? scrollController) {
     return SingleChildScrollView(
       controller: scrollController,
       child: Padding(
@@ -203,7 +236,7 @@ class _NetworkDetailBottomSheetState extends State<NetworkDetailBottomSheet>
     );
   }
 
-  Widget _buildPayloadTab(ScrollController scrollController) {
+  Widget _buildPayloadTab(ScrollController? scrollController) {
     return SingleChildScrollView(
       controller: scrollController,
       child: Padding(
@@ -224,7 +257,7 @@ class _NetworkDetailBottomSheetState extends State<NetworkDetailBottomSheet>
     );
   }
 
-  Widget _buildResponseTab(ScrollController scrollController) {
+  Widget _buildResponseTab(ScrollController? scrollController) {
     return SingleChildScrollView(
       controller: scrollController,
       child: Padding(

@@ -16,12 +16,14 @@ class NetworkListView extends StatefulWidget {
     this.searchQuery = '',
     this.statusFilter = NetworkStatusFilter.all,
     this.onClearLogs,
+    this.onItemTap,
   });
 
   final List<NetworkLogUIEntry> networkLogs;
   final String searchQuery;
   final NetworkStatusFilter statusFilter;
   final VoidCallback? onClearLogs;
+  final ValueChanged<NetworkLogUIEntry>? onItemTap;
 
   @override
   State<NetworkListView> createState() => _NetworkListViewState();
@@ -62,7 +64,13 @@ class _NetworkListViewState extends State<NetworkListView> {
         final log = logs[index];
         return NetworkListItem(
           log: log,
-          onTap: () => _showNetworkDetail(log),
+          onTap: () {
+            if (widget.onItemTap != null) {
+              widget.onItemTap!(log);
+            } else {
+              _showNetworkDetail(log);
+            }
+          },
         );
       },
     );
