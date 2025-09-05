@@ -34,41 +34,32 @@ library;
 // Core contracts (re-exported for convenience)
 export 'package:digia_inspector_core/digia_inspector_core.dart';
 
-// Models
-export 'src/models/log_event_type.dart';
-export 'src/models/error_log_entry.dart';
-export 'src/models/plain_log_entry.dart';
-export 'src/models/state_log_entry.dart';
-export 'src/models/action_log_entry.dart';
-export 'src/models/action_flow_log_entry.dart';
-export 'src/models/network_log_entry.dart';
-
-// Extensions
-export 'src/extensions/network_log_extensions.dart';
-export 'src/extensions/object_extensions.dart';
-export 'src/extensions/string_extensions.dart';
 // Interceptors
 export 'src/interceptors/digia_dio_interceptor.dart';
-// Integration helpers
-export 'src/provider/digia_inspector_provider.dart';
-export 'src/state/action_log_handler.dart';
+export 'src/models/error_log_entry.dart';
+// Models
+export 'src/models/log_event_type.dart';
+export 'src/models/network_log_ui_entry.dart';
+export 'src/models/plain_log_entry.dart';
+export 'src/models/state_log_entry.dart';
+export 'src/state/action_log_manager.dart';
 // State management (refactored for better separation of concerns)
 export 'src/state/inspector_controller.dart';
-export 'src/state/log_entry_manager.dart';
 export 'src/state/log_exporter.dart';
-export 'src/state/network_log_correlator.dart';
+export 'src/state/network_log_manager.dart';
+// New mobile-first design system
+export 'src/theme_system.dart';
 // Utilities
-export 'src/utils/platform_utils.dart';
-// Supporting UI components
-export 'src/widgets/headers_section.dart';
+export 'src/utils/action_utils.dart';
+export 'src/widgets/action/action_detail_bottom_sheet.dart';
+export 'src/widgets/action/action_item.dart';
+// Action widgets
+export 'src/widgets/action/action_list_view.dart';
+export 'src/widgets/action/action_search_filter.dart';
 // Legacy UI components (backwards compatibility wrappers)
 export 'src/widgets/inspector_console_web.dart';
 // Main UI components
 export 'src/widgets/inspector_dashboard.dart';
+export 'src/widgets/inspector_mobile_view.dart';
 export 'src/widgets/inspector_overlay.dart';
 export 'src/widgets/inspector_panel_mobile.dart';
-export 'src/widgets/json_viewer.dart';
-export 'src/widgets/log_console.dart';
-export 'src/widgets/log_entry_item.dart';
-export 'src/widgets/network_detail_view.dart';
-export 'src/widgets/network_logs_panel.dart';

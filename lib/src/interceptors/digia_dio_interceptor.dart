@@ -1,15 +1,14 @@
 import 'dart:convert';
 
-import 'package:digia_inspector/src/models/network_log_entry.dart';
 import 'package:digia_inspector/src/state/inspector_controller.dart';
 import 'package:digia_inspector_core/digia_inspector_core.dart';
 import 'package:dio/dio.dart';
 
 /// Dio interceptor that captures network requests and responses for debugging.
 ///
-/// This interceptor creates unified [NetworkLogEntry] instances that integrate
-/// directly with the [InspectorController], providing Chrome DevTools-like
-/// experience with loading states that transition to completed/failed states.
+/// This interceptor creates [NetworkRequestLog], [NetworkResponseLog] and
+/// [NetworkErrorLog] instances that integrate directly with the
+/// [InspectorController].
 ///
 /// The interceptor correlates requests and responses using URL and method
 /// matching, eliminating the need for separate request ID tracking.
@@ -31,28 +30,6 @@ class DigiaDioInterceptorImpl extends Interceptor
 
   /// Map to track request timing information.
   final Map<RequestOptions, DateTime> _requestTimes = {};
-
-  /// Creates a unified NetworkLogEntry from Dio RequestOptions.
-  UnifiedNetworkLog _createNetworkLogEntry(
-    RequestOptions options, {
-    String? requestId,
-  }) {
-    // Extract API name and ID from request options extra field
-    final apiName = options.extra['apiName'] as String?;
-    final apiId = options.extra['apiId'] as String?;
-
-    return createNetworkLogEntry(
-      method: options.method,
-      url: options.uri.toString(),
-      requestHeaders: _sanitizeHeaders(options.headers),
-      requestBody: _sanitizeBody(options.data),
-      queryParameters: options.queryParameters.isNotEmpty
-          ? Map<String, dynamic>.from(options.queryParameters)
-          : null,
-      apiName: apiName,
-      apiId: apiId,
-    );
-  }
 
   /// Sanitizes headers by removing sensitive information.
   Map<String, dynamic> _sanitizeHeaders(Map<String, dynamic> headers) {
@@ -143,13 +120,30 @@ class DigiaDioInterceptorImpl extends Interceptor
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    // Generate a unique request ID
-    final id = DateTime.now().microsecondsSinceEpoch.toString();
-    options.extra['digiaRequestId'] = id;
+    // Extract API name and ID from request options extra field
+    final apiName = options.extra['apiName'] as String?;
+    final apiId = options.extra['apiId'] as String?;
 
-    // Create and log pending network entry with request ID
-    final networkEntry = _createNetworkLogEntry(options, requestId: id);
-    _controller.logEntry(networkEntry);
+    // Create network request log
+    final requestLog = NetworkRequestLog(
+      requestId: DateTime.now().microsecondsSinceEpoch.toString(),
+      method: options.method,
+      url: options.uri,
+      headers: _sanitizeHeaders(options.headers),
+      body: _sanitizeBody(options.data),
+      queryParameters: options.queryParameters.isNotEmpty
+          ? Map<String, dynamic>.from(options.queryParameters)
+          : null,
+      apiName: apiName,
+      apiId: apiId,
+      timestamp: DateTime.now(),
+    );
+
+    // Log to network manager
+    _controller.networkLogManager.addRequestLog(requestLog);
+
+    // Store request ID for correlation
+    options.extra['digiaRequestId'] = requestLog.requestId;
 
     // Track request timing
     _requestTimes[options] = DateTime.now();
@@ -166,27 +160,21 @@ class DigiaDioInterceptorImpl extends Interceptor
     final requestId =
         response.requestOptions.extra['digiaRequestId'] as String?;
 
-    // Find the corresponding network entry by request ID
-    final networkEntry = _controller.findNetworkEntryByRequestId(requestId);
-
-    if (networkEntry != null) {
+    if (requestId != null) {
       // Create response log
       final responseLog = NetworkResponseLog(
+        requestId: requestId,
         statusCode: response.statusCode ?? 200,
         headers: _sanitizeHeaders(response.headers.map),
         body: _sanitizeBody(response.data),
         duration: requestTime != null
             ? DateTime.now().difference(requestTime)
             : null,
-        requestId: networkEntry.requestId,
+        timestamp: DateTime.now(),
       );
 
-      // Update entry with response data using immutable pattern
-      final updatedEntry = networkEntry.withResponse(responseLog);
-      _controller.updateLogEntry(networkEntry, updatedEntry);
-
-      // Notify UI of the state change
-      _controller.notifyEntryUpdated();
+      // Log to network manager
+      _controller.networkLogManager.addResponseLog(responseLog);
     }
 
     handler.next(response);
@@ -194,20 +182,18 @@ class DigiaDioInterceptorImpl extends Interceptor
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    final requestTime = _requestTimes.remove(err.requestOptions);
+    _requestTimes.remove(err.requestOptions);
     final requestId = err.requestOptions.extra['digiaRequestId'] as String?;
 
-    // Find the corresponding network entry by request ID
-    final networkEntry = _controller.findNetworkEntryByRequestId(requestId);
-
-    if (networkEntry != null) {
+    if (requestId != null) {
       // Create error log
       final errorLog = NetworkErrorLog(
+        requestId: requestId,
         error: _formatDioError(err),
-        requestId: networkEntry.requestId,
         failedUrl: err.requestOptions.uri.toString(),
         failedMethod: err.requestOptions.method,
         stackTrace: err.stackTrace,
+        timestamp: DateTime.now(),
         errorContext: {
           'type': err.type.toString(),
           if (err.response?.statusCode != null)
@@ -219,12 +205,8 @@ class DigiaDioInterceptorImpl extends Interceptor
         },
       );
 
-      // Update entry with error data using immutable pattern
-      final updatedEntry = networkEntry.withError(errorLog);
-      _controller.updateLogEntry(networkEntry, updatedEntry);
-
-      // Notify UI of the state change
-      _controller.notifyEntryUpdated();
+      // Log to network manager
+      _controller.networkLogManager.addErrorLog(errorLog);
     }
 
     handler.next(err);
