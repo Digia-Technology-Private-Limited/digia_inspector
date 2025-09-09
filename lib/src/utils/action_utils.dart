@@ -1,55 +1,22 @@
-import 'package:digia_inspector/src/models/action_flow_ui_entry.dart';
 import 'package:digia_inspector/src/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 /// Utility class for action log operations and formatting
 abstract class ActionLogUtils {
-  /// Filters flows by status
-  static List<ActionFlowUIEntry> filterFlowsByStatus(
-    List<ActionFlowUIEntry> flows,
-    ActionStatusFilter filter,
-  ) {
-    switch (filter) {
-      case ActionStatusFilter.all:
-        return flows;
-      case ActionStatusFilter.pending:
-        return flows.where((f) => f.isPending).toList();
-      case ActionStatusFilter.running:
-        return flows.where((f) => f.isRunning).toList();
-      case ActionStatusFilter.completed:
-        return flows.where((f) => f.isCompleted).toList();
-      case ActionStatusFilter.error:
-        return flows.where((f) => f.hasFailed).toList();
-    }
-  }
-
-  /// Checks if a flow matches the search query
-  static bool matchesFlowSearchQuery(ActionFlowUIEntry flow, String query) {
-    if (query.isEmpty) return true;
-
-    final searchQuery = query.toLowerCase();
-    return flow.displayName.toLowerCase().contains(searchQuery) ||
-        flow.triggerName.toLowerCase().contains(searchQuery) ||
-        flow.sourceChain.any(
-          (source) => source.toLowerCase().contains(searchQuery),
-        ) ||
-        flow.rootAction.actionType.toLowerCase().contains(searchQuery);
-  }
-
   /// Gets color for action status
   static Color getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'completed':
-        return InspectorColors.statusSuccess;
+        return AppColors.statusSuccess;
       case 'error':
       case 'failed':
-        return InspectorColors.statusError;
+        return AppColors.statusError;
       case 'running':
-        return InspectorColors.statusWarning;
+        return AppColors.statusWarning;
       case 'pending':
-        return InspectorColors.statusInfo;
+        return AppColors.statusInfo;
       default:
-        return InspectorColors.contentTertiary;
+        return AppColors.contentTertiary;
     }
   }
 
@@ -93,21 +60,21 @@ abstract class ActionLogUtils {
     switch (trigger.toLowerCase()) {
       case 'onclick':
       case 'click':
-        return InspectorColors.accent;
+        return AppColors.accent;
       case 'onsubmit':
       case 'submit':
-        return InspectorColors.methodPost;
+        return AppColors.methodPost;
       case 'onchange':
       case 'change':
-        return InspectorColors.methodPut;
+        return AppColors.methodPut;
       case 'onload':
       case 'load':
-        return InspectorColors.methodGet;
+        return AppColors.methodGet;
       case 'onvalidate':
       case 'validate':
-        return InspectorColors.statusWarning;
+        return AppColors.statusWarning;
       default:
-        return InspectorColors.contentSecondary;
+        return AppColors.contentSecondary;
     }
   }
 
@@ -128,16 +95,12 @@ abstract class ActionLogUtils {
   static String formatParameters(Map<String, dynamic> parameters) {
     if (parameters.isEmpty) return '';
 
-    final entries = parameters.entries
-        .take(2)
-        .map((entry) {
-          final value = entry.value.toString();
-          final truncatedValue = value.length > 20
-              ? '${value.substring(0, 20)}...'
-              : value;
-          return '${entry.key}: $truncatedValue';
-        })
-        .join(', ');
+    final entries = parameters.entries.take(2).map((entry) {
+      final value = entry.value.toString();
+      final truncatedValue =
+          value.length > 20 ? '${value.substring(0, 20)}...' : value;
+      return '${entry.key}: $truncatedValue';
+    }).join(', ');
 
     if (parameters.length > 2) {
       return '$entries...';
@@ -148,9 +111,9 @@ abstract class ActionLogUtils {
 
   /// Gets progress color based on progress value
   static Color getProgressColor(double progress) {
-    if (progress >= 1.0) return InspectorColors.statusSuccess;
-    if (progress >= 0.5) return InspectorColors.statusWarning;
-    return InspectorColors.statusInfo;
+    if (progress >= 1.0) return AppColors.statusSuccess;
+    if (progress >= 0.5) return AppColors.statusWarning;
+    return AppColors.statusInfo;
   }
 
   /// Gets formatted progress text

@@ -17,37 +17,18 @@ import 'package:dio/dio.dart';
 /// ```dart
 /// final dio = Dio();
 /// final controller = InspectorController();
-/// dio.interceptors.add(DigiaDioInterceptor(controller: controller));
+/// dio.interceptors.add(NetworkObserverImpl(controller: controller));
 /// ```
-class DigiaDioInterceptorImpl extends Interceptor
-    implements DigiaDioInterceptor {
+class NetworkObserverImpl extends Interceptor implements NetworkObserver {
   /// Creates a new Dio interceptor with the specified inspector controller.
-  DigiaDioInterceptorImpl({required InspectorController controller})
-    : _controller = controller;
+  NetworkObserverImpl({required InspectorController controller})
+      : _controller = controller;
 
   /// The inspector controller to log network entries to.
   final InspectorController _controller;
 
   /// Map to track request timing information.
   final Map<RequestOptions, DateTime> _requestTimes = {};
-
-  /// Sanitizes headers by removing sensitive information.
-  Map<String, dynamic> _sanitizeHeaders(Map<String, dynamic> headers) {
-    final sanitized = <String, dynamic>{};
-
-    for (final entry in headers.entries) {
-      final key = entry.key.toLowerCase();
-
-      // Hide sensitive headers
-      if (_isSensitiveHeader(key)) {
-        sanitized[entry.key] = '***';
-      } else {
-        sanitized[entry.key] = entry.value;
-      }
-    }
-
-    return sanitized;
-  }
 
   /// Sanitizes request/response body by limiting size and hiding sensitive data.
   dynamic _sanitizeBody(dynamic body) {
@@ -73,27 +54,76 @@ class DigiaDioInterceptorImpl extends Interceptor
       try {
         final jsonBody = jsonDecode(bodyString);
         return jsonBody;
-      } catch (_) {
+      } on Exception catch (_) {
         return bodyString;
       }
-    } catch (_) {
+    } on Exception catch (_) {
       return body?.toString() ?? 'Unable to serialize body';
     }
   }
 
-  /// Checks if a header contains sensitive information.
-  bool _isSensitiveHeader(String headerName) {
-    final sensitive = [
-      'authorization',
-      'cookie',
-      'set-cookie',
-      'x-api-key',
-      'x-auth-token',
-      'access-token',
-      'refresh-token',
-    ];
+  int _utf8Size(String str) => utf8.encode(str).length;
 
-    return sensitive.any((s) => headerName.contains(s));
+  /// Estimate request size (headers + body)
+  int _calculateRequestSize(RequestOptions options) {
+    var size = 0;
+
+    // Request line: METHOD + path + HTTP/1.1 + CRLF
+    final requestLine =
+        '${options.method} ${options.uri.path}?${options.uri.query} HTTP/1.1\r\n';
+    size += _utf8Size(requestLine);
+
+    // Headers
+    options.headers.forEach((key, value) {
+      final headerLine = '$key: $value\r\n';
+      size += _utf8Size(headerLine);
+    });
+    size += 2; // Final CRLF after headers
+
+    // Body
+    if (options.data != null) {
+      if (options.data is String) {
+        size += _utf8Size(options.data as String);
+      } else if (options.data is Map || options.data is List) {
+        size += _utf8Size(json.encode(options.data));
+      } else if (options.data is List<int>) {
+        size += (options.data as List<int>).length;
+      }
+    }
+
+    return size;
+  }
+
+  /// Estimate response size (headers + body)
+  int _calculateResponseSize(Response<dynamic> response) {
+    var size = 0;
+
+    // Status line: HTTP/1.1 200 OK\r\n
+    final statusLine =
+        'HTTP/1.1 ${response.statusCode ?? 200} ${response.statusMessage ?? ''}\r\n';
+    size += _utf8Size(statusLine);
+
+    // Headers
+    response.headers.forEach((key, values) {
+      for (final value in values) {
+        final headerLine = '$key: $value\r\n';
+        size += _utf8Size(headerLine);
+      }
+    });
+    size += 2; // Final CRLF
+
+    // Body
+    if (response.data != null) {
+      if (response.data is String) {
+        size += _utf8Size(response.data as String);
+      } else if (response.data is Map || response.data is List) {
+        size += _utf8Size(json.encode(response.data));
+      } else if (response.data is List<int>) {
+        size += (response.data as List<int>).length;
+      }
+    }
+
+    return size;
   }
 
   /// Formats a DioException into a readable error message.
@@ -129,11 +159,12 @@ class DigiaDioInterceptorImpl extends Interceptor
       requestId: DateTime.now().microsecondsSinceEpoch.toString(),
       method: options.method,
       url: options.uri,
-      headers: _sanitizeHeaders(options.headers),
+      headers: options.headers,
       body: _sanitizeBody(options.data),
       queryParameters: options.queryParameters.isNotEmpty
           ? Map<String, dynamic>.from(options.queryParameters)
           : null,
+      requestSize: _calculateRequestSize(options),
       apiName: apiName,
       apiId: apiId,
       timestamp: DateTime.now(),
@@ -165,11 +196,11 @@ class DigiaDioInterceptorImpl extends Interceptor
       final responseLog = NetworkResponseLog(
         requestId: requestId,
         statusCode: response.statusCode ?? 200,
-        headers: _sanitizeHeaders(response.headers.map),
+        headers: response.headers.map,
         body: _sanitizeBody(response.data),
-        duration: requestTime != null
-            ? DateTime.now().difference(requestTime)
-            : null,
+        responseSize: _calculateResponseSize(response),
+        duration:
+            requestTime != null ? DateTime.now().difference(requestTime) : null,
         timestamp: DateTime.now(),
       );
 
@@ -196,12 +227,15 @@ class DigiaDioInterceptorImpl extends Interceptor
         timestamp: DateTime.now(),
         errorContext: {
           'type': err.type.toString(),
+          'requestSize': _calculateRequestSize(err.requestOptions),
           if (err.response?.statusCode != null)
             'statusCode': err.response!.statusCode,
           if (err.response?.headers.map != null)
-            'responseHeaders': _sanitizeHeaders(err.response!.headers.map),
+            'responseHeaders': err.response!.headers.map,
           if (err.response?.data != null)
             'responseBody': _sanitizeBody(err.response!.data),
+          if (err.response != null)
+            'responseSize': _calculateResponseSize(err.response!),
         },
       );
 

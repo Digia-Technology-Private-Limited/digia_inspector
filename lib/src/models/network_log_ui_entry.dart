@@ -2,6 +2,24 @@ import 'package:digia_inspector_core/digia_inspector_core.dart';
 
 /// UI representation of a network log entry that can be in different states
 class NetworkLogUIEntry {
+  /// Creates a new UI entry from a request log
+  const NetworkLogUIEntry({
+    required this.id,
+    required this.requestLog,
+    required this.timestamp,
+    this.responseLog,
+    this.errorLog,
+  });
+
+  /// Creates a new UI entry from a request log
+  factory NetworkLogUIEntry.fromRequest(NetworkRequestLog requestLog) {
+    return NetworkLogUIEntry(
+      id: requestLog.apiId ?? requestLog.requestId,
+      requestLog: requestLog,
+      timestamp: requestLog.timestamp,
+    );
+  }
+
   /// Unique identifier for this UI entry (typically the API ID or request ID)
   final String id;
 
@@ -16,23 +34,6 @@ class NetworkLogUIEntry {
 
   /// Timestamp when this entry was created
   final DateTime timestamp;
-
-  const NetworkLogUIEntry({
-    required this.id,
-    required this.requestLog,
-    this.responseLog,
-    this.errorLog,
-    required this.timestamp,
-  });
-
-  /// Creates a new UI entry from a request log
-  factory NetworkLogUIEntry.fromRequest(NetworkRequestLog requestLog) {
-    return NetworkLogUIEntry(
-      id: requestLog.apiId ?? requestLog.requestId,
-      requestLog: requestLog,
-      timestamp: requestLog.timestamp,
-    );
-  }
 
   /// Creates a copy with updated response log
   NetworkLogUIEntry withResponse(NetworkResponseLog responseLog) {
@@ -118,17 +119,17 @@ class NetworkLogUIEntry {
   /// Gets the request size
   int? get requestSize => requestLog.requestSize;
 
-  /// Gets the response size
-  int? get responseSize => responseLog?.responseSize;
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is NetworkLogUIEntry && other.id == id;
+  /// Gets the response size (from response log or error context)
+  int? get responseSize {
+    if (responseLog != null) {
+      return responseLog!.responseSize;
+    }
+    // Try to get response size from error context if available
+    if (errorLog?.errorContext['responseSize'] != null) {
+      return errorLog!.errorContext['responseSize'] as int;
+    }
+    return null;
   }
-
-  @override
-  int get hashCode => id.hashCode;
 
   @override
   String toString() => 'NetworkLogUIEntry($method $displayName)';

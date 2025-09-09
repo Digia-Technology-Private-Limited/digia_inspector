@@ -5,30 +5,39 @@ import 'package:flutter/material.dart';
 
 /// Common app bar for inspector console with back button and clear logs action
 class InspectorAppBar extends StatelessWidget {
+  /// Common app bar for inspector console
   const InspectorAppBar({
     super.key,
     this.onBack,
     this.onClearLogs,
-    this.title = 'Inspect',
     this.showBackButton = true,
-    this.showClearButton = true,
+    this.currentTabIndex,
   });
 
+  /// Callback when back button is pressed
   final VoidCallback? onBack;
-  final VoidCallback? onClearLogs;
-  final String title;
+
+  /// Callback when clear logs button is pressed
+  /// If currentTabIndex is provided, only logs for that tab will be cleared
+  final ValueChanged<int?>? onClearLogs;
+
+  /// Whether to show back button
   final bool showBackButton;
-  final bool showClearButton;
+
+  /// Current tab index for tab-specific log clearing
+  /// (0=Network, 1=Actions, 2=State)
+  /// If null, all logs will be cleared
+  final int? currentTabIndex;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: InspectorSpacing.paddingMD,
+      padding: AppSpacing.paddingSM,
       decoration: const BoxDecoration(
-        color: InspectorColors.backgroundSecondary,
+        color: AppColors.backgroundSecondary,
         border: Border(
           bottom: BorderSide(
-            color: InspectorColors.separator,
+            color: AppColors.separator,
             width: 0.5,
           ),
         ),
@@ -40,30 +49,32 @@ class InspectorAppBar extends StatelessWidget {
               onPressed: onBack,
               icon: const Icon(
                 Icons.arrow_back_ios,
-                color: InspectorColors.contentPrimary,
+                color: AppColors.contentPrimary,
               ),
             )
-          else if (showBackButton)
-            const SizedBox(width: 48), // Spacer for centering
-          Expanded(
-            child: Text(
-              title,
+          else if (showBackButton) ...[
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              'Inspector',
               style: InspectorTypography.headline.copyWith(
-                color: InspectorColors.contentPrimary,
+                fontSize: 16,
+                color: AppColors.contentPrimary,
+                fontWeight: FontWeight.w600,
               ),
-              textAlign: TextAlign.center,
+              textAlign: TextAlign.left,
             ),
-          ),
-          if (showClearButton && onClearLogs != null)
+          ],
+          const Spacer(),
+          if (onClearLogs != null)
             IconButton(
-              onPressed: onClearLogs,
+              onPressed: () => onClearLogs!(currentTabIndex),
               icon: const Icon(
-                Icons.clear_all,
-                color: InspectorColors.contentPrimary,
+                Icons.clear,
+                color: AppColors.contentPrimary,
               ),
             )
-          else if (showClearButton)
-            const SizedBox(width: 48), // Spacer for centering
+          else
+            const SizedBox.shrink(),
         ],
       ),
     );

@@ -2,10 +2,13 @@ import 'package:digia_inspector/src/models/network_log_ui_entry.dart';
 import 'package:digia_inspector_core/digia_inspector_core.dart';
 import 'package:flutter/foundation.dart';
 
-/// Manages network logs for the UI by correlating requests, responses, and errors
-/// using requestId as the unique identifier for each network call
+/// Manages network logs for the UI by correlating requests, responses,
+/// and errors using requestId as the unique identifier for each network call
 class NetworkLogManager extends ChangeNotifier {
+  /// Map of network entries by requestId
   final Map<String, NetworkLogUIEntry> _networkEntries = {};
+
+  /// List of requestIds in chronological order (latest first)
   final List<String> _entryOrder = [];
 
   /// All network log entries in chronological order (latest first)
@@ -23,15 +26,20 @@ class NetworkLogManager extends ChangeNotifier {
 
   /// Current search query
   String _searchQuery = '';
+
+  /// Current search query
   String get searchQuery => _searchQuery;
 
   /// Current status filter
   NetworkStatusFilter _statusFilter = NetworkStatusFilter.all;
+
+  /// Current status filter
   NetworkStatusFilter get statusFilter => _statusFilter;
 
   /// Adds a network request log and creates a new UI entry
   void addRequestLog(NetworkRequestLog requestLog) {
-    // Use requestId as the unique key since each request gets a unique timestamp-based ID
+    // Use requestId as the unique key since each request gets a
+    // unique timestamp-based ID
     final id = requestLog.requestId;
 
     // Always create a new entry for each request (even for same API)
@@ -105,7 +113,7 @@ class NetworkLogManager extends ChangeNotifier {
 
     // Apply search filter
     if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((entry) => _matchesSearch(entry)).toList();
+      filtered = filtered.where(_matchesSearch).toList();
     }
 
     // Apply status filter
@@ -149,8 +157,14 @@ class NetworkLogManager extends ChangeNotifier {
 
   /// Gets count of entries by status
   int get totalCount => _networkEntries.length;
+
+  /// Gets count of pending entries
   int get pendingCount => allEntries.where((e) => e.isPending).length;
+
+  /// Gets count of success entries
   int get successCount => allEntries.where((e) => e.isSuccess).length;
+
+  /// Gets count of error entries
   int get errorCount => allEntries.where((e) => e.hasError).length;
 
   @override
@@ -162,8 +176,15 @@ class NetworkLogManager extends ChangeNotifier {
 
 /// Filter options for network status
 enum NetworkStatusFilter {
+  /// All entries
   all,
+
+  /// Pending entries
   pending,
+
+  /// Success entries
   success,
+
+  /// Error entries
   error,
 }

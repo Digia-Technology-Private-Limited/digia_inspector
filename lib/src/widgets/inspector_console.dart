@@ -11,12 +11,17 @@ import 'package:flutter/material.dart';
 /// - Web: InspectorWebConsole with nested navigation
 /// - Mobile: InspectorMobileConsole with existing mobile structure
 class InspectorConsole extends StatelessWidget {
+  /// Main inspector console with platform-specific implementations
+  ///
+  /// This widget automatically detects the platform and shows the appropriate
+  /// console implementation:
+  /// - Web: InspectorWebConsole with nested navigation
+  /// - Mobile: InspectorMobileConsole with existing mobile structure
   const InspectorConsole({
-    super.key,
     required this.controller,
+    super.key,
     this.onClose,
     this.initialTab = 0,
-    this.isFullScreen = true,
     this.height = 400,
     this.width,
   });
@@ -29,9 +34,6 @@ class InspectorConsole extends StatelessWidget {
 
   /// Initial tab to display (0=Network, 1=Actions, 2=State)
   final int initialTab;
-
-  /// Whether to show as full screen or overlay (mobile only)
-  final bool isFullScreen;
 
   /// Height of the console (web only)
   final double height;

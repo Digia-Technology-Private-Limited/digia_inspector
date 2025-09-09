@@ -1,5 +1,5 @@
+import 'package:digia_inspector/src/log_managers/network_log_manager.dart';
 import 'package:digia_inspector/src/models/network_log_ui_entry.dart';
-import 'package:digia_inspector/src/state/network_log_manager.dart';
 import 'package:digia_inspector/src/theme/app_colors.dart';
 import 'package:digia_inspector/src/utils/extensions.dart';
 import 'package:flutter/material.dart';
@@ -10,28 +10,28 @@ class NetworkLogUtils {
   static Color getMethodColor(String method) {
     switch (method.toUpperCase()) {
       case 'GET':
-        return InspectorColors.methodGet;
+        return AppColors.methodGet;
       case 'POST':
-        return InspectorColors.methodPost;
+        return AppColors.methodPost;
       case 'PUT':
-        return InspectorColors.methodPut;
+        return AppColors.methodPut;
       default:
-        return InspectorColors.contentSecondary;
+        return AppColors.contentSecondary;
     }
   }
 
   /// Gets the appropriate color for a status code
   static Color getStatusCodeColor(int? statusCode) {
-    if (statusCode == null) return InspectorColors.contentSecondary;
+    if (statusCode == null) return AppColors.contentSecondary;
 
     if (statusCode.isSuccess) {
-      return InspectorColors.statusSuccess;
+      return AppColors.statusSuccess;
     } else if (statusCode.isRedirection) {
-      return InspectorColors.statusWarning;
+      return AppColors.statusWarning;
     } else if (statusCode.isClientError || statusCode.isServerError) {
-      return InspectorColors.statusError;
+      return AppColors.statusError;
     } else {
-      return InspectorColors.statusInfo;
+      return AppColors.statusInfo;
     }
   }
 
@@ -79,15 +79,61 @@ class NetworkLogUtils {
     final responseSize = entry.responseSize;
 
     if (requestSize != null && responseSize != null) {
-      final total = requestSize + responseSize;
-      return total.fileSizeFormat;
-    } else if (responseSize != null) {
+      if (requestSize > 0 && responseSize > 0) {
+        final total = requestSize + responseSize;
+        return total.fileSizeFormat;
+      } else if (responseSize > 0) {
+        return responseSize.fileSizeFormat;
+      } else if (requestSize > 0) {
+        return requestSize.fileSizeFormat;
+      }
+    } else if (responseSize != null && responseSize > 0) {
       return responseSize.fileSizeFormat;
-    } else if (requestSize != null) {
+    } else if (requestSize != null && requestSize > 0) {
       return requestSize.fileSizeFormat;
     }
 
-    return '--';
+    // Show different message based on request state
+    if (entry.isPending) {
+      return '--';
+    } else if (entry.hasError) {
+      // Show request size even for errors if available
+      if (requestSize != null && requestSize > 0) {
+        return requestSize.fileSizeFormat;
+      }
+      return 'Error';
+    } else {
+      return '--';
+    }
+  }
+
+  /// Gets detailed size breakdown for a network log entry
+  static String getDetailedSizeDisplay(NetworkLogUIEntry entry) {
+    final requestSize = entry.requestSize;
+    final responseSize = entry.responseSize;
+
+    if (requestSize != null && responseSize != null) {
+      if (requestSize > 0 && responseSize > 0) {
+        return '↑${requestSize.fileSizeFormat} ↓${responseSize.fileSizeFormat}';
+      } else if (responseSize > 0) {
+        return '↓${responseSize.fileSizeFormat}';
+      } else if (requestSize > 0) {
+        return '↑${requestSize.fileSizeFormat}';
+      }
+    } else if (responseSize != null && responseSize > 0) {
+      return '↓${responseSize.fileSizeFormat}';
+    } else if (requestSize != null && requestSize > 0) {
+      return '↑${requestSize.fileSizeFormat}';
+    }
+
+    // Show different message based on request state
+    if (entry.isPending) {
+      return 'Pending';
+    } else if (entry.hasError) {
+      return 'Error';
+    } else {
+      return 'No data';
+    }
   }
 
   /// Checks if a network log entry matches a search query
@@ -145,13 +191,13 @@ class NetworkLogUtils {
         try {
           final parsed = parseJson(jsonData);
           return formatJsonString(parsed);
-        } catch (_) {
+        } on Exception catch (_) {
           return jsonData; // Return as-is if not valid JSON
         }
       } else {
         return formatJsonString(jsonData);
       }
-    } catch (e) {
+    } on Exception catch (_) {
       return jsonData.toString();
     }
   }

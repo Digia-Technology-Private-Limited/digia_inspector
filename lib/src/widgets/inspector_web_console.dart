@@ -1,32 +1,42 @@
-import 'package:digia_inspector/src/models/action_flow_ui_entry.dart';
+import 'package:digia_inspector/src/log_managers/network_log_manager.dart';
 import 'package:digia_inspector/src/models/network_log_ui_entry.dart';
 import 'package:digia_inspector/src/state/inspector_controller.dart';
-import 'package:digia_inspector/src/state/network_log_manager.dart';
-import 'package:digia_inspector/src/theme_system.dart';
-import 'package:digia_inspector/src/widgets/action/action_detail_bottom_sheet.dart';
+import 'package:digia_inspector/src/theme/theme_system.dart';
+import 'package:digia_inspector/src/widgets/action/action_detail_view.dart';
 import 'package:digia_inspector/src/widgets/action/action_list_view.dart';
-import 'package:digia_inspector/src/widgets/action/action_search_filter.dart';
-import 'package:digia_inspector/src/widgets/common/coming_soon_widget.dart';
 import 'package:digia_inspector/src/widgets/common/inspector_app_bar.dart';
 import 'package:digia_inspector/src/widgets/common/inspector_tab_bar.dart';
+import 'package:digia_inspector/src/widgets/network/network_detail_view.dart';
+import 'package:digia_inspector/src/widgets/network/network_list_view.dart';
+import 'package:digia_inspector/src/widgets/network/network_search_filter.dart';
+import 'package:digia_inspector/src/widgets/state/state_log_list_view.dart';
 import 'package:flutter/material.dart';
-import 'package:multi_split_view/multi_split_view.dart';
 
 /// Web-optimized inspector console with nested navigation
 class InspectorWebConsole extends StatefulWidget {
+  /// Web-optimized inspector console with nested navigation
   const InspectorWebConsole({
-    super.key,
     required this.controller,
+    super.key,
     this.onClose,
     this.initialTabIndex = 0,
     this.height = 400,
     this.width,
   });
 
+  /// The inspector controller managing log data
   final InspectorController controller;
+
+  /// Callback when the console should be closed
   final VoidCallback? onClose;
+
+  /// Initial tab to display (0=Network, 1=Actions, 2=State)
   final int initialTabIndex;
+
+  /// Height of the console (web only)
   final double height;
+
+  /// Width of the console (web only)
   final double? width;
 
   @override
@@ -40,7 +50,6 @@ class _InspectorWebConsoleState extends State<InspectorWebConsole>
   // Search and filter state
   String _searchQuery = '';
   NetworkStatusFilter _networkStatusFilter = NetworkStatusFilter.all;
-  ActionStatusFilter _actionStatusFilter = ActionStatusFilter.all;
 
   // Navigation state for web
   String? _selectedNetworkLogId;
@@ -68,63 +77,39 @@ class _InspectorWebConsoleState extends State<InspectorWebConsole>
       height: widget.height,
       width: widget.width ?? double.infinity,
       decoration: BoxDecoration(
-        color: InspectorColors.backgroundPrimary,
+        color: AppColors.backgroundSecondary,
         border: Border.all(
-          color: InspectorColors.separator,
+          color: AppColors.separator,
         ),
-        borderRadius: InspectorBorderRadius.radiusLG,
-        boxShadow: InspectorElevation.cardShadow,
+        borderRadius: AppBorderRadius.radiusLG,
+        boxShadow: AppElevation.cardShadow,
       ),
       child: _buildMainView(),
     );
   }
 
   Widget _buildMainView() {
+    final hasDetail =
+        _selectedNetworkLogId != null || _selectedActionFlowId != null;
+
     return Column(
       children: [
         InspectorAppBar(
           onBack: widget.onClose,
-          onClearLogs: _clearLogs,
+          onClearLogs: _clearTabLogs,
+          currentTabIndex: _tabController.index,
         ),
         InspectorTabBar(
           tabController: _tabController,
           onTabChanged: _onTabChanged,
         ),
-        _buildSearchBar(),
-        Expanded(
-          child: _buildSplitView(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSplitView() {
-    final hasDetail =
-        _selectedNetworkLogId != null || _selectedActionFlowId != null;
-    if (!hasDetail) {
-      return _buildTabContent();
-    }
-
-    return MultiSplitViewTheme(
-      data: MultiSplitViewThemeData(
-        dividerThickness: 8,
-        dividerPainter: DividerPainters.background(
-          highlightedColor: Colors.transparent,
-          color: Colors.transparent,
-        ),
-      ),
-      child: MultiSplitView(
-        initialAreas: [
-          Area(flex: 1),
-          Area(flex: 2, min: 1, max: 1.4),
+        if (hasDetail)
+          Expanded(child: _buildDetailView())
+        else ...[
+          _buildSearchBar(),
+          Expanded(child: _buildTabContent()),
         ],
-        builder: (context, area) {
-          if (area.index == 0) {
-            return _buildTabContent();
-          }
-          return _buildDetailView();
-        },
-      ),
+      ],
     );
   }
 
@@ -158,33 +143,16 @@ class _InspectorWebConsoleState extends State<InspectorWebConsole>
           widget.controller.networkLogManager.setStatusFilter(filter);
         },
       );
-    } else if (currentTab == 1) {
-      // Actions tab
-      return ActionSearchBar(
-        initialQuery: _searchQuery,
-        currentFilter: _actionStatusFilter,
-        onSearchChanged: (query) {
-          setState(() {
-            _searchQuery = query;
-          });
-          widget.controller.actionLogManager.setSearchQuery(query);
-        },
-        onFilterChanged: (filter) {
-          setState(() {
-            _actionStatusFilter = filter;
-          });
-          widget.controller.actionLogManager.setStatusFilter(filter);
-        },
-      );
     }
 
-    // No search bar for State tab
+    // No search bar for Actions and State tabs
     return const SizedBox.shrink();
   }
 
   Widget _buildTabContent() {
     return TabBarView(
       controller: _tabController,
+      physics: const NeverScrollableScrollPhysics(),
       children: [
         _buildNetworkTab(),
         _buildActionsTab(),
@@ -197,7 +165,7 @@ class _InspectorWebConsoleState extends State<InspectorWebConsole>
     return ValueListenableBuilder<List<NetworkLogUIEntry>>(
       valueListenable:
           widget.controller.networkLogManager.filteredEntriesNotifier,
-      builder: (context, networkEntries, __) {
+      builder: (context, networkEntries, _) {
         return NetworkListView(
           networkLogs: networkEntries,
           searchQuery: _searchQuery,
@@ -215,44 +183,29 @@ class _InspectorWebConsoleState extends State<InspectorWebConsole>
   }
 
   Widget _buildActionsTab() {
-    return ValueListenableBuilder<List<ActionFlowUIEntry>>(
-      valueListenable:
-          widget.controller.actionLogManager.filteredFlowEntriesNotifier,
-      builder: (context, actionFlows, __) {
-        return ActionListView(
-          actionFlows: actionFlows,
-          searchQuery: _searchQuery,
-          statusFilter: _actionStatusFilter,
-          onClearLogs: _clearLogs,
-          onItemTap: (flow) {
-            setState(() {
-              _selectedActionFlowId = flow.flowId;
-              _selectedNetworkLogId = null;
-            });
-          },
-        );
+    return ActionListView(
+      actionLogManager: widget.controller.actionLogManager,
+      onClearLogs: _clearLogs,
+      onItemTap: (flow) {
+        setState(() {
+          _selectedActionFlowId = flow.eventId;
+          _selectedNetworkLogId = null;
+        });
       },
     );
   }
 
   Widget _buildStateTab() {
-    return const ComingSoonWidget(
-      icon: Icons.storage,
-      title: 'State',
-      subtitle: 'State inspection coming soon...',
+    return StateLogListView(
+      stateLogManager: widget.controller.stateLogManager,
     );
   }
 
   Widget _buildNetworkDetail() {
-    // Find the selected network log
-    final networkLogs = widget.controller.networkLogManager.allEntries;
-    final selectedLog = networkLogs.firstWhere(
-      (log) => log.id == _selectedNetworkLogId,
-      orElse: () => networkLogs.first,
-    );
-
-    return NetworkDetailBottomSheet(
-      log: selectedLog,
+    // Use the network log manager and log ID for reactive updates
+    return NetworkDetailView(
+      networkLogManager: widget.controller.networkLogManager,
+      logId: _selectedNetworkLogId,
       isWebView: true,
       onClose: () {
         setState(() {
@@ -264,14 +217,16 @@ class _InspectorWebConsoleState extends State<InspectorWebConsole>
 
   Widget _buildActionDetail() {
     // Find the selected action flow
-    final actionFlows = widget.controller.actionLogManager.allFlowEntries;
-    final selectedFlow = actionFlows.firstWhere(
-      (flow) => flow.flowId == _selectedActionFlowId,
-      orElse: () => actionFlows.first,
+    final selectedFlow = widget.controller.actionLogManager.getById(
+      _selectedActionFlowId!,
     );
+    if (selectedFlow == null) {
+      return const SizedBox.shrink();
+    }
 
-    return ActionDetailBottomSheet(
+    return ActionDetailView(
       flow: selectedFlow,
+      actionLogManager: widget.controller.actionLogManager,
       isWebView: true,
       onClose: () {
         setState(() {
@@ -286,19 +241,35 @@ class _InspectorWebConsoleState extends State<InspectorWebConsole>
       // Clear search when switching tabs
       _searchQuery = '';
       _networkStatusFilter = NetworkStatusFilter.all;
-      _actionStatusFilter = ActionStatusFilter.all;
       widget.controller.networkLogManager.setSearchQuery('');
       widget.controller.networkLogManager.setStatusFilter(
         NetworkStatusFilter.all,
-      );
-      widget.controller.actionLogManager.setSearchQuery('');
-      widget.controller.actionLogManager.setStatusFilter(
-        ActionStatusFilter.all,
       );
       // Clear selected items when switching tabs
       _selectedNetworkLogId = null;
       _selectedActionFlowId = null;
     });
+  }
+
+  void _clearTabLogs(int? tabIndex) {
+    if (tabIndex != null) {
+      widget.controller.clearTabLogs(tabIndex);
+      // Only clear search state if we're clearing the network tab
+      if (tabIndex == 0) {
+        setState(() {
+          _searchQuery = '';
+          _networkStatusFilter = NetworkStatusFilter.all;
+          _selectedNetworkLogId = null;
+        });
+      } else if (tabIndex == 1) {
+        // Clear action selection if clearing actions tab
+        setState(() {
+          _selectedActionFlowId = null;
+        });
+      }
+    } else {
+      _clearLogs();
+    }
   }
 
   void _clearLogs() {
@@ -308,7 +279,6 @@ class _InspectorWebConsoleState extends State<InspectorWebConsole>
     setState(() {
       _searchQuery = '';
       _networkStatusFilter = NetworkStatusFilter.all;
-      _actionStatusFilter = ActionStatusFilter.all;
       _selectedNetworkLogId = null;
       _selectedActionFlowId = null;
     });
