@@ -1,23 +1,31 @@
+import 'package:digia_inspector/src/log_managers/network_log_manager.dart';
+import 'package:digia_inspector/src/theme/app_colors.dart';
+import 'package:digia_inspector/src/theme/app_dimensions.dart';
+import 'package:digia_inspector/src/theme/app_typography.dart';
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/app_typography.dart';
-import '../../theme/app_dimensions.dart';
-import '../../state/network_log_manager.dart';
 
 /// Custom overlay for filter dropdown instead of bottom sheet
 class FilterOverlay extends StatefulWidget {
-  final NetworkStatusFilter currentFilter;
-  final ValueChanged<NetworkStatusFilter> onFilterChanged;
-  final GlobalKey buttonKey;
-  final VoidCallback onClose;
-
+  /// Custom overlay for filter dropdown instead of bottom sheet
   const FilterOverlay({
-    super.key,
     required this.currentFilter,
     required this.onFilterChanged,
     required this.buttonKey,
     required this.onClose,
+    super.key,
   });
+
+  /// Current filter
+  final NetworkStatusFilter currentFilter;
+
+  /// Callback when filter is changed
+  final ValueChanged<NetworkStatusFilter> onFilterChanged;
+
+  /// Button key
+  final GlobalKey buttonKey;
+
+  /// Callback when overlay is closed
+  final VoidCallback onClose;
 
   @override
   State<FilterOverlay> createState() => _FilterOverlayState();
@@ -37,31 +45,29 @@ class _FilterOverlayState extends State<FilterOverlay>
     _selectedFilter = widget.currentFilter;
 
     _animationController = AnimationController(
-      duration: InspectorAnimations.fast,
+      duration: AppAnimations.fast,
       vsync: this,
     );
 
-    _fadeAnimation =
-        Tween<double>(
-          begin: 0.0,
-          end: 1.0,
-        ).animate(
-          CurvedAnimation(
-            parent: _animationController,
-            curve: Curves.easeOut,
-          ),
-        );
+    _fadeAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOut,
+      ),
+    );
 
-    _slideAnimation =
-        Tween<Offset>(
-          begin: const Offset(0, -0.1),
-          end: Offset.zero,
-        ).animate(
-          CurvedAnimation(
-            parent: _animationController,
-            curve: Curves.easeOut,
-          ),
-        );
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, -0.1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOut,
+      ),
+    );
 
     _animationController.forward();
   }
@@ -89,7 +95,7 @@ class _FilterOverlayState extends State<FilterOverlay>
         // Positioned filter dropdown
         Positioned(
           top: _getDropdownTop(),
-          right: InspectorSpacing.md,
+          right: AppSpacing.md,
           child: FadeTransition(
             opacity: _fadeAnimation,
             child: SlideTransition(
@@ -103,7 +109,7 @@ class _FilterOverlayState extends State<FilterOverlay>
   }
 
   double _getDropdownTop() {
-    final RenderBox? renderBox =
+    final renderBox =
         widget.buttonKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox != null) {
       final position = renderBox.localToGlobal(Offset.zero);
@@ -115,15 +121,15 @@ class _FilterOverlayState extends State<FilterOverlay>
   Widget _buildFilterDropdown() {
     return Material(
       elevation: 8,
-      borderRadius: InspectorBorderRadius.radiusLG,
-      shadowColor: InspectorColors.shadow,
+      borderRadius: AppBorderRadius.radiusLG,
+      shadowColor: AppColors.shadow,
       child: Container(
         width: 200,
         decoration: BoxDecoration(
-          color: InspectorColors.surfaceElevated,
-          borderRadius: InspectorBorderRadius.radiusLG,
+          color: AppColors.surfaceElevated,
+          borderRadius: AppBorderRadius.radiusLG,
           border: Border.all(
-            color: InspectorColors.separator,
+            color: AppColors.separator,
             width: 0.5,
           ),
         ),
@@ -140,27 +146,27 @@ class _FilterOverlayState extends State<FilterOverlay>
 
   Widget _buildHeader() {
     return Container(
-      padding: InspectorSpacing.paddingSM,
+      padding: AppSpacing.paddingSM,
       decoration: const BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: InspectorColors.separator,
+            color: AppColors.separator,
             width: 0.5,
           ),
         ),
       ),
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.filter_list,
-            size: InspectorIconSizes.sm,
-            color: InspectorColors.contentPrimary,
+            size: AppIconSizes.sm,
+            color: AppColors.contentPrimary,
           ),
-          const SizedBox(width: InspectorSpacing.xs),
+          const SizedBox(width: AppSpacing.xs),
           Text(
             'Filter',
             style: InspectorTypography.subheadBold.copyWith(
-              color: InspectorColors.contentPrimary,
+              color: AppColors.contentPrimary,
             ),
           ),
           const Spacer(),
@@ -175,7 +181,7 @@ class _FilterOverlayState extends State<FilterOverlay>
               child: Text(
                 'Clear',
                 style: InspectorTypography.caption1.copyWith(
-                  color: InspectorColors.accent,
+                  color: AppColors.accent,
                 ),
               ),
             ),
@@ -186,11 +192,9 @@ class _FilterOverlayState extends State<FilterOverlay>
 
   Widget _buildFilterOptions() {
     return Padding(
-      padding: InspectorSpacing.paddingXS,
+      padding: AppSpacing.paddingXS,
       child: Column(
-        children: NetworkStatusFilter.values
-            .map((filter) => _buildFilterOption(filter))
-            .toList(),
+        children: NetworkStatusFilter.values.map(_buildFilterOption).toList(),
       ),
     );
   }
@@ -205,18 +209,18 @@ class _FilterOverlayState extends State<FilterOverlay>
         });
         _applyFilter();
       },
-      borderRadius: InspectorBorderRadius.radiusSM,
+      borderRadius: AppBorderRadius.radiusSM,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(
-          horizontal: InspectorSpacing.sm,
-          vertical: InspectorSpacing.xs,
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
         ),
         decoration: BoxDecoration(
           color: isSelected
-              ? InspectorColors.accent.withOpacity(0.1)
+              ? AppColors.accent.withValues(alpha: 0.1)
               : Colors.transparent,
-          borderRadius: InspectorBorderRadius.radiusSM,
+          borderRadius: AppBorderRadius.radiusSM,
         ),
         child: Row(
           children: [
@@ -224,46 +228,33 @@ class _FilterOverlayState extends State<FilterOverlay>
               width: 16,
               height: 16,
               decoration: BoxDecoration(
-                color: isSelected ? InspectorColors.accent : Colors.transparent,
+                color: isSelected ? AppColors.accent : null,
                 border: Border.all(
-                  color: isSelected
-                      ? InspectorColors.accent
-                      : InspectorColors.contentTertiary,
+                  color:
+                      isSelected ? AppColors.accent : AppColors.contentTertiary,
                   width: 1.5,
                 ),
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: AppBorderRadius.radiusMD,
               ),
               child: isSelected
-                  ? const Icon(
-                      Icons.check,
-                      color: InspectorColors.backgroundSecondary,
-                      size: 10,
+                  ? const Center(
+                      child: Icon(
+                        Icons.check,
+                        color: AppColors.backgroundSecondary,
+                        size: AppIconSizes.xs,
+                      ),
                     )
                   : null,
             ),
-            const SizedBox(width: InspectorSpacing.sm),
+            const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _getFilterTitle(filter),
-                    style: InspectorTypography.subhead.copyWith(
-                      color: isSelected
-                          ? InspectorColors.accent
-                          : InspectorColors.contentPrimary,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.w400,
-                    ),
-                  ),
-                  Text(
-                    _getFilterDescription(filter),
-                    style: InspectorTypography.caption1.copyWith(
-                      color: InspectorColors.contentSecondary,
-                    ),
-                  ),
-                ],
+              child: Text(
+                _getFilterTitle(filter),
+                style: InspectorTypography.subhead.copyWith(
+                  color:
+                      isSelected ? AppColors.accent : AppColors.contentPrimary,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                ),
               ),
             ),
           ],
@@ -295,25 +286,14 @@ class _FilterOverlayState extends State<FilterOverlay>
         return 'Pending';
     }
   }
-
-  String _getFilterDescription(NetworkStatusFilter filter) {
-    switch (filter) {
-      case NetworkStatusFilter.all:
-        return 'Show all requests';
-      case NetworkStatusFilter.success:
-        return 'Show successful only';
-      case NetworkStatusFilter.error:
-        return 'Show failed requests';
-      case NetworkStatusFilter.pending:
-        return 'Show pending requests';
-    }
-  }
 }
 
 /// Helper widget to show the filter overlay
 class FilterOverlayManager {
+  /// Overlay entry
   static OverlayEntry? _overlayEntry;
 
+  /// Shows the filter overlay
   static void show({
     required BuildContext context,
     required NetworkStatusFilter currentFilter,
@@ -334,6 +314,7 @@ class FilterOverlayManager {
     Overlay.of(context).insert(_overlayEntry!);
   }
 
+  /// Hides the filter overlay
   static void hide() {
     _overlayEntry?.remove();
     _overlayEntry = null;

@@ -1,28 +1,30 @@
-import 'package:digia_inspector/src/models/action_flow_ui_entry.dart';
+import 'package:digia_inspector/src/log_managers/action_log_manager.dart';
 import 'package:digia_inspector/src/theme/app_colors.dart';
 import 'package:digia_inspector/src/theme/app_dimensions.dart';
 import 'package:digia_inspector/src/theme/app_typography.dart';
-import 'package:digia_inspector/src/utils/action_utils.dart';
-import 'package:digia_inspector/src/utils/extensions.dart';
-import 'package:digia_inspector/src/widgets/action/action_detail_bottom_sheet.dart';
+import 'package:digia_inspector/src/widgets/action/action_detail_view.dart';
+import 'package:digia_inspector/src/widgets/action/action_list_item.dart';
+import 'package:digia_inspector_core/digia_inspector_core.dart';
 import 'package:flutter/material.dart';
 
 /// Mobile-first action list view matching the UI design
 class ActionListView extends StatefulWidget {
+  /// Constructor
   const ActionListView({
+    required this.actionLogManager,
     super.key,
-    required this.actionFlows,
-    this.searchQuery = '',
-    this.statusFilter = ActionStatusFilter.all,
     this.onClearLogs,
     this.onItemTap,
   });
 
-  final List<ActionFlowUIEntry> actionFlows;
-  final String searchQuery;
-  final ActionStatusFilter statusFilter;
+  /// Action log manager
+  final ActionLogManager actionLogManager;
+
+  /// Callback when logs are cleared
   final VoidCallback? onClearLogs;
-  final ValueChanged<ActionFlowUIEntry>? onItemTap;
+
+  /// Callback when an item is tapped
+  final ValueChanged<ActionLog>? onItemTap;
 
   @override
   State<ActionListView> createState() => _ActionListViewState();
@@ -31,37 +33,53 @@ class ActionListView extends StatefulWidget {
 class _ActionListViewState extends State<ActionListView> {
   @override
   Widget build(BuildContext context) {
-    final filteredFlows = ActionLogUtils.filterFlowsByStatus(
-      widget.actionFlows
-          .where(
-            (flow) =>
-                ActionLogUtils.matchesFlowSearchQuery(flow, widget.searchQuery),
-          )
-          .toList(),
-      widget.statusFilter,
-    );
+    return ValueListenableBuilder<List<ActionLog>>(
+      valueListenable: widget.actionLogManager.topLevelActionsNotifier,
+      builder: (context, topLevelActions, child) {
+        // Group actions by actionId to show only one item per unique action
+        final groupedActions = _groupActionsByActionId(topLevelActions);
 
-    return Column(
-      children: [
-        Expanded(
-          child: filteredFlows.isEmpty
-              ? _buildEmptyState()
-              : _buildActionList(filteredFlows),
-        ),
-        _buildBottomBar(filteredFlows),
-      ],
+        return Column(
+          children: [
+            Expanded(
+              child: groupedActions.isEmpty
+                  ? _buildEmptyState()
+                  : _buildActionList(groupedActions),
+            ),
+            _buildBottomBar(topLevelActions),
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildActionList(List<ActionFlowUIEntry> flows) {
+  /// Groups actions by actionId, keeping only the latest action
+  List<ActionLog> _groupActionsByActionId(List<ActionLog> actions) {
+    final latestActionsByActionId = <String, ActionLog>{};
+
+    for (final action in actions) {
+      final existing = latestActionsByActionId[action.actionId];
+      if (existing == null || action.timestamp.isAfter(existing.timestamp)) {
+        latestActionsByActionId[action.actionId] = action;
+      }
+    }
+
+    return latestActionsByActionId.values.toList()
+      ..sort(
+        (a, b) => b.timestamp.compareTo(a.timestamp),
+      ); // Sort by newest first
+  }
+
+  Widget _buildActionList(List<ActionLog> groupedActions) {
     return ListView.separated(
-      padding: InspectorSpacing.paddingMD,
-      itemCount: flows.length,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      itemCount: groupedActions.length,
       separatorBuilder: (context, index) =>
-          const SizedBox(height: InspectorSpacing.sm),
+          const SizedBox(height: AppSpacing.sm),
       itemBuilder: (context, index) {
-        final flow = flows[index];
+        final flow = groupedActions[index];
         return ActionFlowListItem(
+          actionLogManager: widget.actionLogManager,
           flow: flow,
           onTap: () {
             if (widget.onItemTap != null) {
@@ -76,48 +94,30 @@ class _ActionListViewState extends State<ActionListView> {
   }
 
   Widget _buildEmptyState() {
-    String message;
-    String subtitle;
-    IconData icon;
-
-    if (widget.searchQuery.isNotEmpty) {
-      message = 'No matching actions';
-      subtitle = 'Try adjusting your search query';
-      icon = Icons.search_off;
-    } else if (widget.statusFilter != ActionStatusFilter.all) {
-      message = 'No actions found';
-      subtitle = 'Try changing the filter settings';
-      icon = Icons.filter_list_off;
-    } else {
-      message = 'No actions logged';
-      subtitle = 'Action logs will appear here when your app performs actions';
-      icon = Icons.play_circle_outline;
-    }
-
     return Center(
       child: Padding(
-        padding: InspectorSpacing.paddingXL,
+        padding: AppSpacing.paddingXL,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
+            const Icon(
+              Icons.play_circle_outline,
               size: 64,
-              color: InspectorColors.contentTertiary,
+              color: AppColors.contentTertiary,
             ),
-            const SizedBox(height: InspectorSpacing.md),
+            const SizedBox(height: AppSpacing.md),
             Text(
-              message,
+              'No actions logged',
               style: InspectorTypography.headline.copyWith(
-                color: InspectorColors.contentSecondary,
+                color: AppColors.contentSecondary,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: InspectorSpacing.sm),
+            const SizedBox(height: AppSpacing.sm),
             Text(
-              subtitle,
+              'Action logs will appear here when your app performs actions',
               style: InspectorTypography.subhead.copyWith(
-                color: InspectorColors.contentTertiary,
+                color: AppColors.contentTertiary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -127,214 +127,51 @@ class _ActionListViewState extends State<ActionListView> {
     );
   }
 
-  Widget _buildBottomBar(List<ActionFlowUIEntry> flows) {
-    final totalActions = flows.fold<int>(
+  Widget _buildBottomBar(List<ActionLog> allActions) {
+    // Group actions to get unique action IDs for display
+    final groupedActions = _groupActionsByActionId(allActions);
+
+    // Calculate total action count across all action IDs
+    final totalActionCount = groupedActions.fold<int>(
       0,
-      (sum, flow) => sum + flow.actionCount,
+      (sum, action) =>
+          sum + widget.actionLogManager.countActions(action.actionId),
     );
 
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(
-        horizontal: InspectorSpacing.md,
-        vertical: InspectorSpacing.sm,
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
       ),
       decoration: const BoxDecoration(
-        color: InspectorColors.backgroundSecondary,
+        color: AppColors.backgroundPrimary,
         border: Border(
           top: BorderSide(
-            color: InspectorColors.separator,
-            width: 0.5,
+            color: AppColors.borderDefault,
           ),
         ),
       ),
       child: Text(
-        flows.length == 1
-            ? '1 flow • $totalActions actions'
-            : '${flows.length} flows • $totalActions actions',
+        groupedActions.length == 1
+            ? '1 flow • $totalActionCount actions'
+            : '${groupedActions.length} flows • $totalActionCount actions',
         style: InspectorTypography.footnote.copyWith(
-          color: InspectorColors.contentTertiary,
+          color: AppColors.contentPrimary,
         ),
         textAlign: TextAlign.center,
       ),
     );
   }
 
-  void _showActionDetail(ActionFlowUIEntry flow) {
+  void _showActionDetail(ActionLog flow) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => ActionDetailBottomSheet(flow: flow),
-    );
-  }
-}
-
-/// Individual action flow list item widget
-class ActionFlowListItem extends StatelessWidget {
-  const ActionFlowListItem({
-    super.key,
-    required this.flow,
-    required this.onTap,
-  });
-
-  final ActionFlowUIEntry flow;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: InspectorColors.backgroundSecondary,
-        borderRadius: InspectorBorderRadius.radiusLG,
-        border: Border.all(
-          color: InspectorColors.separator,
-          width: 1,
-        ),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: InspectorBorderRadius.radiusLG,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: InspectorBorderRadius.radiusLG,
-          child: Padding(
-            padding: InspectorSpacing.paddingMD,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(),
-                const SizedBox(height: InspectorSpacing.sm),
-                _buildMetadata(),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return Row(
-      children: [
-        _buildTriggerChip(),
-        const SizedBox(width: InspectorSpacing.sm),
-        Expanded(child: _buildActionText()),
-        _buildChevron(),
-      ],
-    );
-  }
-
-  Widget _buildTriggerChip() {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: InspectorSpacing.sm,
-        vertical: InspectorSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: InspectorColors.accent.withOpacity(0.1),
-        borderRadius: InspectorBorderRadius.radiusSM,
-      ),
-      child: Text(
-        flow.triggerName,
-        style: InspectorTypography.caption1Bold.copyWith(
-          color: InspectorColors.accent,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionText() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          flow.displayName,
-          style: InspectorTypography.callout.copyWith(
-            color: InspectorColors.contentPrimary,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        if (flow.sourceChain.isNotEmpty)
-          Text(
-            flow.sourceChainDisplay,
-            style: InspectorTypography.footnote.copyWith(
-              color: InspectorColors.contentTertiary,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-      ],
-    );
-  }
-
-  Widget _buildChevron() {
-    return const Icon(
-      Icons.chevron_right,
-      size: InspectorIconSizes.md,
-      color: InspectorColors.chevronColor,
-    );
-  }
-
-  Widget _buildMetadata() {
-    return Row(
-      children: [
-        _buildTimestamp(),
-        const SizedBox(width: InspectorSpacing.md),
-        _buildActionCount(),
-        const Spacer(),
-        _buildStatusChip(),
-      ],
-    );
-  }
-
-  Widget _buildTimestamp() {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(
-          Icons.schedule,
-          size: InspectorIconSizes.sm,
-          color: InspectorColors.contentTertiary,
-        ),
-        const SizedBox(width: 2),
-        Text(
-          flow.timestamp.networkLogFormat,
-          style: InspectorTypography.footnote.copyWith(
-            color: InspectorColors.contentSecondary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionCount() {
-    return Text(
-      '${flow.actionCount} actions',
-      style: InspectorTypography.footnote.copyWith(
-        color: InspectorColors.contentSecondary,
-      ),
-    );
-  }
-
-  Widget _buildStatusChip() {
-    final statusColor = ActionLogUtils.getStatusColor(flow.statusSummary);
-    final statusText = ActionLogUtils.getStatusDisplayText(flow.statusSummary);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: InspectorSpacing.sm,
-        vertical: InspectorSpacing.xs,
-      ),
-      decoration: BoxDecoration(
-        color: statusColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        statusText,
-        style: InspectorTypography.caption1Bold.copyWith(
-          color: InspectorColors.backgroundSecondary,
-        ),
+      builder: (context) => ActionDetailView(
+        flow: flow,
+        actionLogManager: widget.actionLogManager,
       ),
     );
   }

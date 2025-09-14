@@ -1,14 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Extension methods for common operations
-extension StringExtensionsForInspector on String? {
-  /// Returns true if string is not null and not empty
-  bool get isNotEmpty => this != null && this!.trim().isNotEmpty;
-
-  /// Returns the string or a fallback if null/empty
-  String orDefault(String fallback) => isNotEmpty ? this! : fallback;
-}
-
+/// Extension methods for HTTP method operations
 extension HttpMethodExtensions on String {
   /// Returns true if the HTTP method typically has a request body
   bool get hasRequestBody {
@@ -26,6 +19,7 @@ extension HttpMethodExtensions on String {
   }
 }
 
+/// Extension methods for status code operations
 extension StatusCodeExtensions on int {
   /// Returns true if status code indicates success (2xx)
   bool get isSuccess => this >= 200 && this < 300;
@@ -88,6 +82,7 @@ extension StatusCodeExtensions on int {
   }
 }
 
+/// Extension methods for duration operations
 extension DurationExtensions on Duration {
   /// Formats duration for display in network logs
   String get displayString {
@@ -104,6 +99,7 @@ extension DurationExtensions on Duration {
   }
 }
 
+/// Extension methods for date time operations
 extension DateTimeExtensions on DateTime {
   /// Formats timestamp for network log display
   String get networkLogFormat {
@@ -117,7 +113,7 @@ extension DateTimeExtensions on DateTime {
           '${second.toString().padLeft(2, '0')}';
     } else {
       // Show date and time for other days
-      return '${month}/${day} '
+      return '$month/$day '
           '${hour.toString().padLeft(2, '0')}:'
           '${minute.toString().padLeft(2, '0')}';
     }
@@ -131,15 +127,19 @@ extension DateTimeExtensions on DateTime {
     if (difference.inSeconds < 60) {
       return 'Just now';
     } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes} minute${difference.inMinutes == 1 ? '' : 's'} ago';
+      return '${difference.inMinutes} minute'
+          '${difference.inMinutes == 1 ? '' : 's'} ago';
     } else if (difference.inHours < 24) {
-      return '${difference.inHours} hour${difference.inHours == 1 ? '' : 's'} ago';
+      return '${difference.inHours} hour'
+          '${difference.inHours == 1 ? '' : 's'} ago';
     } else {
-      return '${difference.inDays} day${difference.inDays == 1 ? '' : 's'} ago';
+      return '${difference.inDays} day'
+          '${difference.inDays == 1 ? '' : 's'} ago';
     }
   }
 }
 
+/// Extension methods for file size operations
 extension FileSizeExtensions on int {
   /// Formats file size for display
   String get fileSizeFormat {
@@ -153,15 +153,56 @@ extension FileSizeExtensions on int {
   }
 }
 
-/// Clipboard utilities
+/// Extension methods for clipboard utilities
 class ClipboardUtils {
   /// Copies text to clipboard and returns success status
   static Future<bool> copyToClipboard(String text) async {
     try {
       await Clipboard.setData(ClipboardData(text: text));
       return true;
-    } catch (e) {
+    } on Exception catch (_) {
       return false;
+    }
+  }
+
+  /// Copies text to clipboard and shows a black toast with green checkmark
+  static Future<void> copyToClipboardWithToast(
+    BuildContext context,
+    String text, {
+    String? customMessage,
+  }) async {
+    final success = await copyToClipboard(text);
+
+    if (context.mounted && success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                customMessage ?? 'Copied to clipboard',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.black87,
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+          width: 190,
+        ),
+      );
     }
   }
 }

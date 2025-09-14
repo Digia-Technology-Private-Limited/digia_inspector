@@ -1,28 +1,32 @@
-import 'package:digia_inspector/src/models/action_flow_ui_entry.dart';
+import 'package:digia_inspector/src/log_managers/network_log_manager.dart';
 import 'package:digia_inspector/src/models/network_log_ui_entry.dart';
 import 'package:digia_inspector/src/state/inspector_controller.dart';
-import 'package:digia_inspector/src/state/network_log_manager.dart';
-import 'package:digia_inspector/src/theme_system.dart';
+import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:digia_inspector/src/widgets/action/action_list_view.dart';
-import 'package:digia_inspector/src/widgets/action/action_search_filter.dart';
-import 'package:digia_inspector/src/widgets/common/coming_soon_widget.dart';
 import 'package:digia_inspector/src/widgets/common/inspector_app_bar.dart';
 import 'package:digia_inspector/src/widgets/common/inspector_tab_bar.dart';
 import 'package:digia_inspector/src/widgets/network/network_list_view.dart';
 import 'package:digia_inspector/src/widgets/network/network_search_filter.dart';
+import 'package:digia_inspector/src/widgets/state/state_log_list_view.dart';
 import 'package:flutter/material.dart';
 
 /// Mobile-optimized inspector console with existing mobile structure
 class InspectorMobileConsole extends StatefulWidget {
+  /// Mobile-optimized inspector console with existing mobile structure
   const InspectorMobileConsole({
-    super.key,
     required this.controller,
+    super.key,
     this.onClose,
     this.initialTabIndex = 0,
   });
 
+  /// The inspector controller managing log data
   final InspectorController controller;
+
+  /// Callback when the console should be closed
   final VoidCallback? onClose;
+
+  /// Initial tab to display (0=Network, 1=Actions, 2=State)
   final int initialTabIndex;
 
   @override
@@ -36,7 +40,6 @@ class _InspectorMobileConsoleState extends State<InspectorMobileConsole>
   // Search and filter state
   String _searchQuery = '';
   NetworkStatusFilter _networkStatusFilter = NetworkStatusFilter.all;
-  ActionStatusFilter _actionStatusFilter = ActionStatusFilter.all;
 
   @override
   void initState() {
@@ -57,13 +60,14 @@ class _InspectorMobileConsoleState extends State<InspectorMobileConsole>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: InspectorColors.backgroundPrimary,
+      backgroundColor: AppColors.backgroundPrimary,
       body: SafeArea(
         child: Column(
           children: [
             InspectorAppBar(
               onBack: widget.onClose,
-              onClearLogs: _clearLogs,
+              onClearLogs: _clearTabLogs,
+              currentTabIndex: _tabController.index,
             ),
             InspectorTabBar(
               tabController: _tabController,
@@ -98,33 +102,16 @@ class _InspectorMobileConsoleState extends State<InspectorMobileConsole>
           widget.controller.networkLogManager.setStatusFilter(filter);
         },
       );
-    } else if (currentTab == 1) {
-      // Actions tab
-      return ActionSearchBar(
-        initialQuery: _searchQuery,
-        currentFilter: _actionStatusFilter,
-        onSearchChanged: (query) {
-          setState(() {
-            _searchQuery = query;
-          });
-          widget.controller.actionLogManager.setSearchQuery(query);
-        },
-        onFilterChanged: (filter) {
-          setState(() {
-            _actionStatusFilter = filter;
-          });
-          widget.controller.actionLogManager.setStatusFilter(filter);
-        },
-      );
     }
 
-    // No search bar for State tab
+    // No search bar for Actions and State tabs
     return const SizedBox.shrink();
   }
 
   Widget _buildTabContent() {
     return TabBarView(
       controller: _tabController,
+      physics: const NeverScrollableScrollPhysics(),
       children: [
         _buildNetworkTab(),
         _buildActionsTab(),
@@ -137,37 +124,28 @@ class _InspectorMobileConsoleState extends State<InspectorMobileConsole>
     return ValueListenableBuilder<List<NetworkLogUIEntry>>(
       valueListenable:
           widget.controller.networkLogManager.filteredEntriesNotifier,
-      builder: (context, networkEntries, __) {
+      builder: (context, networkEntries, _) {
         return NetworkListView(
           networkLogs: networkEntries,
           searchQuery: _searchQuery,
           statusFilter: _networkStatusFilter,
           onClearLogs: _clearLogs,
+          networkLogManager: widget.controller.networkLogManager,
         );
       },
     );
   }
 
   Widget _buildActionsTab() {
-    return ValueListenableBuilder<List<ActionFlowUIEntry>>(
-      valueListenable:
-          widget.controller.actionLogManager.filteredFlowEntriesNotifier,
-      builder: (context, actionFlows, __) {
-        return ActionListView(
-          actionFlows: actionFlows,
-          searchQuery: _searchQuery,
-          statusFilter: _actionStatusFilter,
-          onClearLogs: _clearLogs,
-        );
-      },
+    return ActionListView(
+      actionLogManager: widget.controller.actionLogManager,
+      onClearLogs: _clearLogs,
     );
   }
 
   Widget _buildStateTab() {
-    return const ComingSoonWidget(
-      icon: Icons.storage,
-      title: 'State',
-      subtitle: 'State inspection coming soon...',
+    return StateLogListView(
+      stateLogManager: widget.controller.stateLogManager,
     );
   }
 
@@ -176,16 +154,26 @@ class _InspectorMobileConsoleState extends State<InspectorMobileConsole>
       // Clear search when switching tabs
       _searchQuery = '';
       _networkStatusFilter = NetworkStatusFilter.all;
-      _actionStatusFilter = ActionStatusFilter.all;
       widget.controller.networkLogManager.setSearchQuery('');
       widget.controller.networkLogManager.setStatusFilter(
         NetworkStatusFilter.all,
       );
-      widget.controller.actionLogManager.setSearchQuery('');
-      widget.controller.actionLogManager.setStatusFilter(
-        ActionStatusFilter.all,
-      );
     });
+  }
+
+  void _clearTabLogs(int? tabIndex) {
+    if (tabIndex != null) {
+      widget.controller.clearTabLogs(tabIndex);
+      // Only clear search state if we're clearing the network tab
+      if (tabIndex == 0) {
+        setState(() {
+          _searchQuery = '';
+          _networkStatusFilter = NetworkStatusFilter.all;
+        });
+      }
+    } else {
+      _clearLogs();
+    }
   }
 
   void _clearLogs() {
@@ -195,7 +183,6 @@ class _InspectorMobileConsoleState extends State<InspectorMobileConsole>
     setState(() {
       _searchQuery = '';
       _networkStatusFilter = NetworkStatusFilter.all;
-      _actionStatusFilter = ActionStatusFilter.all;
     });
   }
 }

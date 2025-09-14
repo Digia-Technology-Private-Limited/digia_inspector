@@ -1,3 +1,4 @@
+import 'package:digia_inspector/src/log_managers/action_log_manager.dart';
 import 'package:digia_inspector/src/theme/app_colors.dart';
 import 'package:digia_inspector/src/theme/app_dimensions.dart';
 import 'package:digia_inspector/src/theme/app_typography.dart';
@@ -5,20 +6,25 @@ import 'package:digia_inspector/src/utils/action_utils.dart';
 import 'package:digia_inspector/src/utils/extensions.dart';
 import 'package:digia_inspector_core/digia_inspector_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 /// Widget for displaying individual action items with full details
 class ActionItem extends StatefulWidget {
+  /// Widget for displaying individual action items with full details
   const ActionItem({
-    super.key,
     required this.action,
+    super.key,
     this.isChild = false,
-    this.showDetails = false,
+    this.actionLogManager,
   });
 
+  /// Action log
   final ActionLog action;
+
+  /// Whether the action is a child
   final bool isChild;
-  final bool showDetails;
+
+  /// Action log manager
+  final ActionLogManager? actionLogManager;
 
   @override
   State<ActionItem> createState() => _ActionItemState();
@@ -29,83 +35,158 @@ class _ActionItemState extends State<ActionItem> {
 
   @override
   Widget build(BuildContext context) {
+    // If we have an ActionLogManager, listen for real-time updates
+    if (widget.actionLogManager != null) {
+      return ValueListenableBuilder<List<ActionLog>>(
+        valueListenable: widget.actionLogManager!.allLogsNotifier,
+        builder: (context, allLogs, child) {
+          // Get the current version of the action (in case it was updated)
+          final currentAction = widget.actionLogManager!.getById(
+            widget.action.eventId,
+          );
+          if (currentAction == null) {
+            // Action was deleted, return empty container
+            return const SizedBox.shrink();
+          }
+          return _buildActionItem(currentAction);
+        },
+      );
+    }
+
+    // Fallback to static display if no ActionLogManager provided
+    return _buildActionItem(widget.action);
+  }
+
+  Widget _buildActionItem(ActionLog currentAction) {
+    if (widget.isChild) {
+      // For child items, create a stack with the indicator outside
+      return Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Child indicator positioned in the margin area
+          Positioned(
+            left: -AppSpacing.xs, // Position in the margin space
+            top: AppSpacing.xs,
+            child: _buildChildIndicator(),
+          ),
+          // Main container with reduced margin since indicator is outside
+          Container(
+            margin: const EdgeInsets.only(left: AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: AppColors.backgroundSecondary,
+              borderRadius: AppBorderRadius.radiusLG,
+              border: Border.all(
+                color: AppColors.borderDefault,
+              ),
+            ),
+            child: InkWell(
+              onTap: () => setState(() => _isExpanded = !_isExpanded),
+              splashFactory: NoSplash.splashFactory,
+              borderRadius: AppBorderRadius.radiusLG,
+              child: Padding(
+                padding: AppSpacing.paddingMD,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildHeader(currentAction),
+                    if (_isExpanded) ...[
+                      const SizedBox(height: AppSpacing.md),
+                      _buildDetails(currentAction),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // For parent items, no margin or indicator
     return Container(
-      margin: widget.isChild
-          ? const EdgeInsets.only(left: InspectorSpacing.lg)
-          : EdgeInsets.zero,
       decoration: BoxDecoration(
-        color: InspectorColors.backgroundSecondary,
-        borderRadius: InspectorBorderRadius.radiusLG,
+        color: AppColors.backgroundSecondary,
+        borderRadius: AppBorderRadius.radiusLG,
         border: Border.all(
-          color: widget.isChild
-              ? InspectorColors.separator.withOpacity(0.5)
-              : InspectorColors.separator,
-          width: 1,
+          color: AppColors.borderDefault,
         ),
       ),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: InspectorBorderRadius.radiusLG,
-        child: InkWell(
-          onTap: widget.showDetails
-              ? () => setState(() => _isExpanded = !_isExpanded)
-              : null,
-          borderRadius: InspectorBorderRadius.radiusLG,
-          child: Padding(
-            padding: InspectorSpacing.paddingMD,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeader(),
-                if (_isExpanded && widget.showDetails) ...[
-                  const SizedBox(height: InspectorSpacing.md),
-                  _buildDetails(),
-                ],
+      child: InkWell(
+        onTap: () => setState(() => _isExpanded = !_isExpanded),
+        splashFactory: NoSplash.splashFactory,
+        borderRadius: AppBorderRadius.radiusLG,
+        child: Padding(
+          padding: AppSpacing.paddingMD,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(currentAction),
+              if (_isExpanded) ...[
+                const SizedBox(height: AppSpacing.md),
+                _buildDetails(currentAction),
               ],
-            ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(ActionLog currentAction) {
     return Row(
       children: [
-        _buildStatusIndicator(),
-        const SizedBox(width: InspectorSpacing.sm),
-        Expanded(child: _buildActionInfo()),
-        if (widget.showDetails) _buildExpandIcon(),
+        _buildStatusIndicator(currentAction),
+        const SizedBox(width: AppSpacing.sm),
+        Expanded(child: _buildActionInfo(currentAction)),
+        _buildExpandIcon(),
       ],
     );
   }
 
-  Widget _buildStatusIndicator() {
-    final statusColor = ActionLogUtils.getStatusColor(
-      widget.action.status.name,
+  Widget _buildChildIndicator() {
+    return Container(
+      width: 20,
+      height: 20,
+      decoration: BoxDecoration(
+        color: AppColors.backgroundSecondary,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: AppColors.contentTertiary,
+        ),
+      ),
+      child: const Icon(
+        Icons.subdirectory_arrow_right,
+        size: AppIconSizes.xs,
+        color: AppColors.contentTertiary,
+      ),
     );
-    final statusIcon = ActionLogUtils.getStatusIcon(widget.action.status.name);
+  }
+
+  Widget _buildStatusIndicator(ActionLog currentAction) {
+    final statusColor = ActionLogUtils.getStatusColor(
+      currentAction.status.name,
+    );
+    final statusIcon = ActionLogUtils.getStatusIcon(currentAction.status.name);
 
     return Container(
       width: 24,
       height: 24,
       decoration: BoxDecoration(
-        color: statusColor.withOpacity(0.1),
+        color: statusColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: statusColor,
-          width: 1,
         ),
       ),
       child: Icon(
         statusIcon,
-        size: InspectorIconSizes.sm,
+        size: AppIconSizes.sm,
         color: statusColor,
       ),
     );
   }
 
-  Widget _buildActionInfo() {
+  Widget _buildActionInfo(ActionLog currentAction) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -113,32 +194,32 @@ class _ActionItemState extends State<ActionItem> {
           children: [
             Expanded(
               child: Text(
-                widget.action.actionType,
+                currentAction.actionType,
                 style: InspectorTypography.callout.copyWith(
-                  color: InspectorColors.contentPrimary,
+                  color: AppColors.contentPrimary,
                   fontWeight: FontWeight.w500,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            if (widget.action.executionTime != null) ...[
-              const SizedBox(width: InspectorSpacing.xs),
+            if (currentAction.executionTime != null) ...[
+              const SizedBox(width: AppSpacing.xs),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: InspectorSpacing.xs,
+                  horizontal: AppSpacing.xs,
                   vertical: 2,
                 ),
                 decoration: BoxDecoration(
-                  color: InspectorColors.searchBackground,
+                  color: AppColors.searchBackground,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   ActionLogUtils.formatExecutionTime(
-                    widget.action.executionTime,
+                    currentAction.executionTime,
                   ),
                   style: InspectorTypography.caption1.copyWith(
-                    color: InspectorColors.contentSecondary,
+                    color: AppColors.contentSecondary,
                   ),
                 ),
               ),
@@ -148,31 +229,31 @@ class _ActionItemState extends State<ActionItem> {
         const SizedBox(height: 2),
         Row(
           children: [
-            Icon(
+            const Icon(
               Icons.schedule,
-              size: InspectorIconSizes.xs,
-              color: InspectorColors.contentTertiary,
+              size: AppIconSizes.xs,
+              color: AppColors.contentTertiary,
             ),
             const SizedBox(width: 2),
             Text(
-              widget.action.timestamp.networkLogFormat,
+              currentAction.timestamp.networkLogFormat,
               style: InspectorTypography.footnote.copyWith(
-                color: InspectorColors.contentSecondary,
+                color: AppColors.contentSecondary,
               ),
             ),
-            if (widget.action.sourceChain.isNotEmpty) ...[
-              const SizedBox(width: InspectorSpacing.sm),
-              Icon(
+            if (currentAction.sourceChain.isNotEmpty) ...[
+              const SizedBox(width: AppSpacing.sm),
+              const Icon(
                 Icons.link,
-                size: InspectorIconSizes.xs,
-                color: InspectorColors.contentTertiary,
+                size: AppIconSizes.xs,
+                color: AppColors.contentTertiary,
               ),
               const SizedBox(width: 2),
               Expanded(
                 child: Text(
-                  widget.action.sourceChain.last,
+                  currentAction.sourceChain.last,
                   style: InspectorTypography.footnote.copyWith(
-                    color: InspectorColors.contentSecondary,
+                    color: AppColors.contentSecondary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -181,27 +262,26 @@ class _ActionItemState extends State<ActionItem> {
             ],
           ],
         ),
-        if (widget.action.errorMessage != null) ...[
-          const SizedBox(height: InspectorSpacing.xs),
+        if (currentAction.errorMessage != null) ...[
+          const SizedBox(height: AppSpacing.xs),
           Container(
             padding: const EdgeInsets.symmetric(
-              horizontal: InspectorSpacing.xs,
+              horizontal: AppSpacing.xs,
               vertical: 2,
             ),
             decoration: BoxDecoration(
-              color: InspectorColors.statusError.withOpacity(0.1),
+              color: AppColors.statusError.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(4),
               border: Border.all(
-                color: InspectorColors.statusError.withOpacity(0.3),
-                width: 1,
+                color: AppColors.statusError.withValues(alpha: 0.3),
               ),
             ),
             child: Text(
-              widget.action.errorMessage!.length > 50
-                  ? '${widget.action.errorMessage!.substring(0, 50)}...'
-                  : widget.action.errorMessage!,
+              currentAction.errorMessage!.length > 50
+                  ? '${currentAction.errorMessage!.substring(0, 50)}...'
+                  : currentAction.errorMessage!,
               style: InspectorTypography.caption1.copyWith(
-                color: InspectorColors.statusError,
+                color: AppColors.statusError,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -215,29 +295,32 @@ class _ActionItemState extends State<ActionItem> {
   Widget _buildExpandIcon() {
     return Icon(
       _isExpanded ? Icons.expand_less : Icons.expand_more,
-      size: InspectorIconSizes.md,
-      color: InspectorColors.contentTertiary,
+      size: AppIconSizes.md,
+      color: AppColors.contentTertiary,
     );
   }
 
-  Widget _buildDetails() {
+  Widget _buildDetails(ActionLog currentAction) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (widget.action.sourceChain.isNotEmpty) _buildSourceChain(),
-        if (widget.action.resolvedParameters.isNotEmpty) _buildParameters(),
-        if (widget.action.actionDefinition.isNotEmpty) _buildDefinition(),
-        if (widget.action.metadata.isNotEmpty) _buildMetadata(),
+        if (currentAction.sourceChain.isNotEmpty)
+          _buildSourceChain(currentAction),
+        if (currentAction.resolvedParameters.isNotEmpty)
+          _buildParameters(currentAction),
+        if (currentAction.actionDefinition.isNotEmpty)
+          _buildDefinition(currentAction),
+        if (currentAction.metadata.isNotEmpty) _buildMetadata(currentAction),
       ],
     );
   }
 
-  Widget _buildSourceChain() {
+  Widget _buildSourceChain(ActionLog currentAction) {
     return _buildDetailSection(
       'Widget Hierarchy',
       Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: widget.action.sourceChain
+        children: currentAction.sourceChain
             .map(
               (source) => Padding(
                 padding: const EdgeInsets.only(bottom: 2),
@@ -245,15 +328,15 @@ class _ActionItemState extends State<ActionItem> {
                   children: [
                     const Icon(
                       Icons.arrow_right,
-                      size: InspectorIconSizes.xs,
-                      color: InspectorColors.contentTertiary,
+                      size: AppIconSizes.xs,
+                      color: AppColors.contentTertiary,
                     ),
-                    const SizedBox(width: InspectorSpacing.xs),
+                    const SizedBox(width: AppSpacing.xs),
                     Expanded(
                       child: Text(
                         source,
                         style: InspectorTypography.caption1.copyWith(
-                          color: InspectorColors.contentSecondary,
+                          color: AppColors.contentSecondary,
                         ),
                       ),
                     ),
@@ -266,48 +349,48 @@ class _ActionItemState extends State<ActionItem> {
     );
   }
 
-  Widget _buildParameters() {
+  Widget _buildParameters(ActionLog currentAction) {
     return _buildDetailSection(
       'Parameters',
-      _buildJsonView(widget.action.resolvedParameters),
+      _buildJsonView(currentAction.resolvedParameters),
     );
   }
 
-  Widget _buildDefinition() {
+  Widget _buildDefinition(ActionLog currentAction) {
     return _buildDetailSection(
       'Definition',
-      _buildJsonView(widget.action.actionDefinition),
+      _buildJsonView(currentAction.actionDefinition),
     );
   }
 
-  Widget _buildMetadata() {
+  Widget _buildMetadata(ActionLog currentAction) {
     return _buildDetailSection(
       'Metadata',
-      _buildJsonView(widget.action.metadata),
+      _buildJsonView(currentAction.metadata),
     );
   }
 
   Widget _buildDetailSection(String title, Widget content) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: InspectorSpacing.md),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
             style: InspectorTypography.subheadBold.copyWith(
-              color: InspectorColors.contentSecondary,
+              color: AppColors.contentSecondary,
             ),
           ),
-          const SizedBox(height: InspectorSpacing.xs),
+          const SizedBox(height: AppSpacing.xs),
           Container(
             width: double.infinity,
-            padding: InspectorSpacing.paddingMD,
+            padding: AppSpacing.paddingMD,
             decoration: BoxDecoration(
-              color: InspectorColors.searchBackground,
-              borderRadius: InspectorBorderRadius.radiusSM,
+              color: AppColors.searchBackground,
+              borderRadius: AppBorderRadius.radiusSM,
               border: Border.all(
-                color: InspectorColors.separator,
+                color: AppColors.separator,
                 width: 0.5,
               ),
             ),
@@ -322,11 +405,14 @@ class _ActionItemState extends State<ActionItem> {
     final jsonString = _formatJson(data);
 
     return GestureDetector(
-      onTap: () => _copyToClipboard(jsonString),
+      onTap: () => ClipboardUtils.copyToClipboardWithToast(
+        context,
+        jsonString,
+      ),
       child: Text(
         jsonString,
         style: InspectorTypography.monospace.copyWith(
-          color: InspectorColors.contentPrimary,
+          color: AppColors.contentPrimary,
           fontSize: 11,
         ),
       ),
@@ -336,12 +422,10 @@ class _ActionItemState extends State<ActionItem> {
   String _formatJson(Map<String, dynamic> data) {
     if (data.isEmpty) return '{}';
 
-    final entries = data.entries
-        .map((entry) {
-          final value = _formatValue(entry.value);
-          return '  "${entry.key}": $value';
-        })
-        .join(',\n');
+    final entries = data.entries.map((entry) {
+      final value = _formatValue(entry.value);
+      return '  "${entry.key}": $value';
+    }).join(',\n');
 
     return '{\n$entries\n}';
   }
@@ -353,16 +437,5 @@ class _ActionItemState extends State<ActionItem> {
     if (value is List) return '[${value.length} items]';
     if (value is Map) return '{${value.length} keys}';
     return '"$value"';
-  }
-
-  void _copyToClipboard(String text) {
-    Clipboard.setData(ClipboardData(text: text));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Copied to clipboard'),
-        duration: const Duration(seconds: 2),
-        backgroundColor: InspectorColors.accent,
-      ),
-    );
   }
 }

@@ -1,49 +1,99 @@
 import 'package:flutter/material.dart';
 
-/// Color constants for DigiaInspector - following the mobile-first design system
-abstract class InspectorColors {
+/// Color constants for DigiaInspector
+abstract class AppColors {
   // Background Colors
-  static const backgroundPrimary = Color(0xFFF9F9F9); // Main background
-  static const backgroundSecondary = Color(0xFFFFFFFF); // Card backgrounds
-  static const backgroundOverlay = Color(
-    0xFF000000,
-  ); // Modal overlay (with opacity)
+  /// Main background
+  static const backgroundPrimary = Color(0xFFF9F9F9);
+
+  /// Card backgrounds
+  static const backgroundSecondary = Color(0xFFFFFFFF);
+
+  /// Background tertiary
+  static const backgroundTertiary = Color(0xFFF5F5F5);
+
+  /// Modal overlay (with opacity)
+  static const backgroundOverlay = Color(0xFF000000);
 
   // Surface Colors
-  static const surfaceElevated = Color(0xFFFFFFFF); // Elevated cards/modals
-  static const surfacePressed = Color(0xFFF0F0F0); // Pressed states
-  static const surfaceBorder = Color(0xFFE5E5E5); // Default borders
+  /// Elevated cards/modals
+  static const surfaceElevated = Color(0xFFFFFFFF);
+
+  /// Pressed states
+  static const surfacePressed = Color(0xFFF0F0F0);
+
+  /// Default borders
+  static const surfaceBorder = Color(0xFFE5E5E5);
+
+  /// Border default
+  static const borderDefault = Color(0x3D000000);
 
   // Content Colors
-  static const contentPrimary = Color(0xFF1C1C1E); // Primary text
-  static const contentSecondary = Color(0xFF8E8E93); // Secondary text
-  static const contentTertiary = Color(0xFFC7C7CC); // Tertiary text/icons
-  static const contentPlaceholder = Color(0xFF999999); // Placeholder text
+  /// Primary text
+  static const contentPrimary = Color(0xFF1C1C1E);
+
+  /// Secondary text
+  static const contentSecondary = Color(0xFF4A4A4A);
+
+  /// Tertiary text/icons
+  static const contentTertiary = Color(0xFFC7C7CC);
+
+  /// Placeholder text
+  static const contentPlaceholder = Color(0xFF999999);
 
   // Status Colors
-  static const statusSuccess = Color(0xFF34C759); // 2xx status codes
-  static const statusWarning = Color(0xFFFF9500); // 3xx status codes
-  static const statusError = Color(0xFFFF3B30); // 4xx/5xx status codes
-  static const statusInfo = Color(0xFF007AFF); // Info/pending states
+  /// 2xx status codes
+  static const statusSuccess = Color(0xFF34C759);
+
+  /// 3xx status codes
+  static const statusWarning = Color(0xFFFF9500);
+
+  /// 4xx/5xx status codes
+  static const statusError = Color(0xFFFF3B30);
+
+  /// Info/pending states
+  static const statusInfo = Color(0xFF007AFF);
 
   // Method Colors
-  static const methodGet = Color(0xFF34C759); // GET requests
-  static const methodPost = Color(0xFF007AFF); // POST requests
-  static const methodPut = Color(0xFFFF9500); // PUT requests
-  static const methodDelete = Color(0xFFFF3B30); // DELETE requests
-  static const methodPatch = Color(0xFF5856D6); // PATCH requests
-  static const methodHead = Color(0xFF8E8E93); // HEAD requests
-  static const methodOptions = Color(0xFF8E8E93); // OPTIONS requests
+  /// GET requests
+  static const methodGet = Color(0xFF34C759);
+
+  /// POST requests
+  static const methodPost = Color(0xFF007AFF);
+
+  /// PUT requests
+  static const methodPut = Color(0xFFFF9500);
+
+  /// DELETE requests
+  static const methodDelete = Color(0xFFFF3B30);
+
+  /// PATCH requests
+  static const methodPatch = Color(0xFF5856D6);
+
+  /// HEAD requests
+  static const methodHead = Color(0xFF8E8E93);
+
+  /// OPTIONS requests
+  static const methodOptions = Color(0xFF8E8E93);
 
   // Interactive Colors
-  static const accent = Color(0xFF007AFF); // Primary accent/selection
-  static const accentPressed = Color(0xFF0056CC); // Pressed accent state
+  /// Primary accent/selection
+  static const accent = Color(0xFF007AFF);
+
+  /// Pressed accent state
+  static const accentPressed = Color(0xFF0056CC);
 
   // Utility Colors
-  static const separator = Color(0xFFE5E5E5); // List separators
-  static const shadow = Color(0x1A000000); // Drop shadows
+  /// List separators
+  static const separator = Color(0xFFE5E5E5);
+
+  /// Drop shadows
+  static const shadow = Color(0x1A000000);
 
   // Special Colors
-  static const searchBackground = Color(0xFFF2F2F7); // Search field background
-  static const chevronColor = Color(0xFFC7C7CC); // Chevron arrows
+  /// Search field background
+  static const searchBackground = Color(0xFFF2F2F7);
+
+  /// Chevron arrows
+  static const chevronColor = Color(0xFFC7C7CC);
 }

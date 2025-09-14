@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 
 /// A reusable widget that maps action statuses to consistent colors and icons
 class StatusIndicator extends StatelessWidget {
-  final String status;
-  final double size;
-
+  /// A reusable widget that maps action statuses to consistent colors and icons
   const StatusIndicator({
-    Key? key,
     required this.status,
+    super.key,
     this.size = 16.0,
-  }) : super(key: key);
+  });
+
+  /// Status
+  final String status;
+
+  /// Size
+  final double size;
 
   @override
   Widget build(BuildContext context) {
@@ -75,38 +79,13 @@ class StatusIndicator extends StatelessWidget {
 
 /// Data class for status information
 class _StatusData {
-  final IconData icon;
-  final Color color;
-
+  /// Status data
   _StatusData({
     required this.icon,
     required this.color,
   });
-}
 
-/// Extension to get status color for other components
-extension StatusIndicatorExtension on String {
-  Color get statusColor {
-    switch (toLowerCase()) {
-      case 'pending':
-        return Colors.orange;
-      case 'running':
-      case 'in_progress':
-        return Colors.blue;
-      case 'completed':
-      case 'success':
-        return Colors.green;
-      case 'error':
-      case 'failed':
-        return Colors.red;
-      case 'disabled':
-        return Colors.grey;
-      case 'cancelled':
-        return Colors.orange.shade700;
-      case 'timeout':
-        return Colors.amber.shade800;
-      default:
-        return Colors.grey.shade600;
-    }
-  }
+  /// Icon
+  final IconData icon;
+  final Color color;
 }

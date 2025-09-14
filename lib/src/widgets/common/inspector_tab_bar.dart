@@ -1,48 +1,53 @@
-import 'package:digia_inspector/src/theme/app_colors.dart';
-import 'package:digia_inspector/src/theme/app_dimensions.dart';
-import 'package:digia_inspector/src/theme/app_typography.dart';
+import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:flutter/material.dart';
 
 /// Common tab bar for inspector console
 class InspectorTabBar extends StatelessWidget {
+  /// Common tab bar for inspector console
   const InspectorTabBar({
-    super.key,
     required this.tabController,
+    super.key,
     this.onTabChanged,
   });
 
+  /// Tab controller
   final TabController tabController;
+
+  /// Callback when tab is changed
   final ValueChanged<int>? onTabChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: InspectorColors.backgroundSecondary,
-        border: Border(
-          bottom: BorderSide(
-            color: InspectorColors.separator,
-            width: 0.5,
-          ),
-        ),
-      ),
+    return Padding(
+      padding: const EdgeInsets.all(16),
       child: TabBar(
+        tabAlignment: TabAlignment.start,
+        isScrollable: true,
+        physics: const NeverScrollableScrollPhysics(),
         controller: tabController,
-        labelColor: InspectorColors.contentPrimary,
-        unselectedLabelColor: InspectorColors.contentSecondary,
+        indicator: const BoxDecoration(
+          color: AppColors.backgroundTertiary,
+          borderRadius: AppBorderRadius.radiusXXL,
+        ),
+        indicatorSize: TabBarIndicatorSize.tab,
+        dividerColor: Colors.transparent,
+        labelColor: AppColors.contentPrimary,
+        unselectedLabelColor: AppColors.contentSecondary,
         labelStyle: InspectorTypography.subheadBold,
-        unselectedLabelStyle: InspectorTypography.subhead,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
+        splashFactory: NoSplash.splashFactory,
+        labelPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          // vertical: 6,
+        ),
         onTap: onTabChanged,
         tabs: const [
           Tab(
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.language,
-                  size: InspectorIconSizes.sm,
-                ),
-                SizedBox(width: InspectorSpacing.xs),
+                Icon(Icons.language, size: 16),
+                SizedBox(width: 6),
                 Text('Network'),
               ],
             ),
@@ -51,11 +56,8 @@ class InspectorTabBar extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.bolt,
-                  size: InspectorIconSizes.sm,
-                ),
-                SizedBox(width: InspectorSpacing.xs),
+                Icon(Icons.ads_click_sharp, size: 16),
+                SizedBox(width: 6),
                 Text('Actions'),
               ],
             ),
@@ -64,11 +66,8 @@ class InspectorTabBar extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  Icons.storage,
-                  size: InspectorIconSizes.sm,
-                ),
-                SizedBox(width: InspectorSpacing.xs),
+                Icon(Icons.storage, size: 16),
+                SizedBox(width: 6),
                 Text('State'),
               ],
             ),
