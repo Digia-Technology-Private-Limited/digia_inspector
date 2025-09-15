@@ -31,7 +31,7 @@ class ActionFlowListItem extends StatelessWidget {
         color: AppColors.backgroundSecondary,
         borderRadius: AppBorderRadius.radiusLG,
         border: Border.all(
-          color: AppColors.separator,
+          color: AppColors.borderDefault,
         ),
       ),
       child: InkWell(
@@ -75,7 +75,7 @@ class ActionFlowListItem extends StatelessWidget {
         borderRadius: AppBorderRadius.radiusSM,
       ),
       child: Text(
-        flow.triggerName,
+        flow.triggerName ?? 'Unknown',
         style: InspectorTypography.caption1Bold.copyWith(
           color: AppColors.accent,
         ),
@@ -95,9 +95,9 @@ class ActionFlowListItem extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        if (flow.sourceChain.isNotEmpty)
+        if (flow.sourceChain?.isNotEmpty ?? false)
           Text(
-            'Entity: ${flow.sourceChain.first}',
+            'Entity: ${flow.sourceChain?.first ?? 'Unknown'}',
             style: InspectorTypography.footnote.copyWith(
               color: AppColors.contentTertiary,
             ),
@@ -149,7 +149,7 @@ class ActionFlowListItem extends StatelessWidget {
   }
 
   Widget _buildActionCount() {
-    final totalActions = actionLogManager.countActions(flow.actionId);
+    final totalActions = actionLogManager.countActionsInFlow(flow.id);
     return Text(
       '$totalActions actions',
       style: InspectorTypography.footnote.copyWith(

@@ -24,7 +24,10 @@ class InspectorController extends ChangeNotifier implements DigiaInspector {
         _stateLogManager = StateLogManager(),
         _networkObserver = null,
         _actionObserver = null,
-        _stateObserver = null;
+        _stateObserver = null {
+    // Clear existing logs on initialization
+    clearLogs();
+  }
 
   /// Manages network logs with request/response/error correlation.
   final NetworkLogManager _networkLogManager;
@@ -168,13 +171,6 @@ class InspectorController extends ChangeNotifier implements DigiaInspector {
     }
 
     _logStreamController.add(entry);
-  }
-
-  /// Updates an existing log entry (for backward compatibility).
-  void updateLogEntry(DigiaLogEvent oldEntry, DigiaLogEvent newEntry) {
-    // This method is kept for backward compatibility but is not needed
-    // in the new system since NetworkLogManager handles updates internally
-    logEntry(newEntry);
   }
 
   @override

@@ -22,95 +22,77 @@ class StateObserverImpl implements StateObserver {
   final InspectorController _controller;
 
   @override
-  void onCreate(
-    String stateId,
-    StateType stateType, {
+  void onCreate({
+    required String id,
+    required StateType stateType,
     String? namespace,
-    Map<String, Object?>? args,
-    Map<String, Object?>? initialState,
-    Map<String, Object?>? metadata,
+    Map<String, Object?>? argData,
+    Map<String, Object?>? stateData,
   }) {
-    // Add state to the state log manager for UI display
     _controller.stateLogManager.addStateLog(
       StateLog.onCreate(
-        stateId: stateId,
+        id: id,
         stateType: stateType,
         namespace: namespace,
-        args: args,
-        initialState: initialState,
-        metadata: metadata,
+        argData: argData,
+        stateData: stateData,
       ),
     );
   }
 
   @override
-  void onChange(
-    String stateId,
-    StateType stateType, {
+  void onChange({
+    required String id,
+    required StateType stateType,
     String? namespace,
-    Map<String, Object?>? args,
-    Map<String, Object?>? changes,
-    Map<String, Object?>? previousState,
-    Map<String, Object?>? currentState,
-    Map<String, Object?>? metadata,
+    Map<String, Object?>? argData,
+    Map<String, Object?>? stateData,
   }) {
-    // Add state to the state log manager for UI display
     _controller.stateLogManager.addStateLog(
       StateLog.onChange(
-        stateId: stateId,
+        id: id,
         stateType: stateType,
         namespace: namespace,
-        args: args,
-        changes: changes,
-        previousState: previousState,
-        currentState: currentState,
-        metadata: metadata,
+        argData: argData,
+        stateData: stateData,
       ),
     );
   }
 
   @override
-  void onDispose(
-    String stateId,
-    StateType stateType, {
+  void onDispose({
+    required String id,
+    required StateType stateType,
     String? namespace,
-    Map<String, Object?>? args,
-    Map<String, Object?>? finalState,
-    Map<String, Object?>? metadata,
+    Map<String, Object?>? argData,
+    Map<String, Object?>? stateData,
   }) {
-    // Update existing state with progress information
     _controller.stateLogManager.addStateLog(
       StateLog.onDispose(
-        stateId: stateId,
+        id: id,
         stateType: stateType,
         namespace: namespace,
-        args: args,
-        finalState: finalState,
-        metadata: metadata,
+        argData: argData,
+        stateData: stateData,
       ),
     );
   }
 
   @override
-  void onError(
-    String stateId,
-    StateType stateType,
-    Object error,
-    StackTrace stackTrace, {
+  void onError({
+    required String id,
+    required StateType stateType,
+    required Object error,
+    required StackTrace stackTrace,
     String? namespace,
-    Map<String, Object?>? args,
-    Map<String, Object?>? metadata,
   }) {
-    // Update existing state with error information
     _controller.stateLogManager.addStateLog(
       StateLog.onError(
-        stateId: stateId,
+        id: id,
         stateType: stateType,
         error: error,
         stackTrace: stackTrace,
         namespace: namespace,
-        args: args,
-        metadata: metadata,
       ),
     );
   }

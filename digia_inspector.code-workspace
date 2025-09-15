@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../digia_inspector_core"
+		},
+		{
+			"path": "../digia_ui"
+		}
+	]
+}

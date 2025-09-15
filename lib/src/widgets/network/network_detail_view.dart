@@ -3,6 +3,7 @@ import 'package:digia_inspector/src/models/network_log_ui_entry.dart';
 import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:digia_inspector/src/utils/extensions.dart';
 import 'package:digia_inspector/src/utils/network_utils.dart';
+import 'package:digia_inspector/src/widgets/common/json_view.dart';
 import 'package:flutter/material.dart';
 
 /// Widget for displaying detailed network request information
@@ -473,72 +474,98 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
     required String title,
     required dynamic content,
   }) {
-    final formattedContent = NetworkLogUtils.formatJsonForDisplay(content);
+    // Attempt to parse JSON-like strings for better structured display
+    dynamic value = content;
+    if (content is String) {
+      try {
+        value = NetworkLogUtils.tryDecodeJson(content) ?? content;
+      } catch (_) {
+        value = content;
+      }
+    }
 
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: AppColors.separator,
+    // If primitive or string that isn't JSON, keep previous styling but with copy
+    final isComplex = value is Map || value is List;
+    if (!isComplex) {
+      final textValue = value.toString();
+      return Container(
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: AppColors.separator,
+          ),
+          borderRadius: AppBorderRadius.radiusMD,
         ),
-        borderRadius: AppBorderRadius.radiusMD,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header with copy button
-          Container(
-            padding: AppSpacing.paddingSM,
-            decoration: const BoxDecoration(
-              color: AppColors.backgroundPrimary,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(AppBorderRadius.md),
-                topRight: Radius.circular(AppBorderRadius.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: AppSpacing.paddingSM,
+              decoration: const BoxDecoration(
+                color: AppColors.backgroundPrimary,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(AppBorderRadius.md),
+                  topRight: Radius.circular(AppBorderRadius.md),
+                ),
               ),
-            ),
-            child: Row(
-              children: [
-                const Icon(
-                  Icons.code,
-                  size: AppIconSizes.sm,
-                  color: AppColors.contentSecondary,
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Text(
-                  title,
-                  style: InspectorTypography.footnoteBold.copyWith(
-                    color: AppColors.contentPrimary,
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  onPressed: () => ClipboardUtils.copyToClipboardWithToast(
-                    context,
-                    formattedContent,
-                  ),
-                  icon: const Icon(
-                    Icons.copy,
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.code,
                     size: AppIconSizes.sm,
                     color: AppColors.contentSecondary,
                   ),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ],
-            ),
-          ),
-          // Content
-          Container(
-            width: double.infinity,
-            padding: AppSpacing.paddingSM,
-            child: SelectableText(
-              formattedContent,
-              style: InspectorTypography.monospace.copyWith(
-                color: AppColors.contentPrimary,
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    title,
+                    style: InspectorTypography.footnoteBold.copyWith(
+                      color: AppColors.contentPrimary,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    onPressed: () => ClipboardUtils.copyToClipboardWithToast(
+                      context,
+                      textValue,
+                    ),
+                    icon: const Icon(
+                      Icons.copy,
+                      size: AppIconSizes.sm,
+                      color: AppColors.contentSecondary,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
               ),
             ),
+            Container(
+              width: double.infinity,
+              padding: AppSpacing.paddingSM,
+              child: SelectableText(
+                textValue,
+                style: InspectorTypography.monospace.copyWith(
+                  color: AppColors.contentPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Structured JSON content via JsonView
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: InspectorTypography.subheadBold.copyWith(
+            color: AppColors.contentPrimary,
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        JsonView(value: value),
+      ],
     );
   }
 

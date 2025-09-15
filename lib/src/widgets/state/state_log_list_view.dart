@@ -13,9 +13,15 @@ class StateData {
   final Map<String, dynamic> currentState = {};
 
   /// Arguments/parameters captured at creation time (e.g., pageArgs, componentArgs)
-  final Map<String, dynamic> args = {};
+  final Map<String, dynamic> argData = {};
 
-  /// Last updated timestamp for either args or state
+  /// Last updated timestamp per variable (key = variable name, value = timestamp)
+  final Map<String, DateTime> variableTimestamps = {};
+
+  /// Last updated timestamp for args
+  final Map<String, DateTime> argTimestamps = {};
+
+  /// Last updated timestamp for either args or state (for UI display)
   DateTime lastUpdated = DateTime.fromMillisecondsSinceEpoch(0);
 }
 
@@ -61,7 +67,11 @@ class _StateLogListViewState extends State<StateLogListView> {
   }
 
   void _onStateLogsChanged() {
-    if (mounted) setState(() {});
+    if (mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {});
+      });
+    }
   }
 
   @override
@@ -109,7 +119,7 @@ class _StateLogListViewState extends State<StateLogListView> {
               ...groupedStates[StateType.page]
                       ?.entries
                       .map(
-                        (e) => _buildPageNamespaceSection(
+                        (e) => _buildEntityNamespaceSection(
                           namespace: e.key,
                           stateData: e.value,
                         ),
@@ -122,7 +132,7 @@ class _StateLogListViewState extends State<StateLogListView> {
               ...groupedStates[StateType.component]
                       ?.entries
                       .map(
-                        (e) => _buildComponentNamespaceSection(
+                        (e) => _buildEntityNamespaceSection(
                           namespace: e.key,
                           stateData: e.value,
                         ),
@@ -162,6 +172,14 @@ class _StateLogListViewState extends State<StateLogListView> {
         .map((d) => d.currentState.length)
         .fold<int>(0, (a, b) => a + b);
 
+    // Determine most recent update across all app namespaces
+    DateTime? latest;
+    for (final data in namespaces.values) {
+      if (latest == null || data.lastUpdated.isAfter(latest)) {
+        latest = data.lastUpdated;
+      }
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -185,6 +203,7 @@ class _StateLogListViewState extends State<StateLogListView> {
                 _expandedStates[sectionKey] = !isExpanded;
               });
             },
+            lastUpdated: latest,
           ),
           if (isExpanded) ...[
             const Divider(height: 1),
@@ -199,10 +218,12 @@ class _StateLogListViewState extends State<StateLogListView> {
                     if (data.currentState.isEmpty) return <Widget>[];
                     return [
                       ...data.currentState.entries.map((e) {
+                        final normalized = _normalizeKeyValue(e.key, e.value);
                         return StateVariableItem(
                           variableKey: ns,
-                          value: e.value,
-                          lastUpdated: data.lastUpdated,
+                          value: normalized.value,
+                          lastUpdated: data.variableTimestamps[e.key] ??
+                              data.lastUpdated,
                         );
                       }),
                     ];
@@ -216,17 +237,17 @@ class _StateLogListViewState extends State<StateLogListView> {
     );
   }
 
-  /// Page: outer header + inner Parameters and States
-  Widget? _buildPageNamespaceSection({
+  /// Entity: outer header + inner Parameters and States
+  Widget? _buildEntityNamespaceSection({
     required String namespace,
     required StateData stateData,
   }) {
-    final argsCount = stateData.args.length;
+    final argsCount = stateData.argData.length;
     final stateCount = stateData.currentState.length;
     final totalCount = argsCount + stateCount;
     if (totalCount == 0) return null;
 
-    final outerKey = 'page:$namespace';
+    final outerKey = 'entity:$namespace';
     final paramsKey = '$outerKey:params';
     final statesKey = '$outerKey:states';
 
@@ -251,6 +272,7 @@ class _StateLogListViewState extends State<StateLogListView> {
             isExpanded: isExpanded,
             onTap: () =>
                 setState(() => _expandedStates[outerKey] = !isExpanded),
+            lastUpdated: stateData.lastUpdated,
           ),
           if (isExpanded) ...[
             const Divider(height: 1),
@@ -263,7 +285,7 @@ class _StateLogListViewState extends State<StateLogListView> {
                       children: [
                         StateSectionHeader(
                           title: const Text(
-                            'Page Parameters',
+                            'Parameters',
                             style: InspectorTypography.subhead,
                           ),
                           icon: Icons.tune,
@@ -273,6 +295,7 @@ class _StateLogListViewState extends State<StateLogListView> {
                             () => _expandedStates[paramsKey] =
                                 !(_expandedStates[paramsKey] ?? true),
                           ),
+                          lastUpdated: stateData.lastUpdated,
                         ),
                         if (isParamsExpanded)
                           Padding(
@@ -280,7 +303,7 @@ class _StateLogListViewState extends State<StateLogListView> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                ...stateData.args.entries.map((e) {
+                                ...stateData.argData.entries.map((e) {
                                   final normalized = _normalizeKeyValue(
                                     e.key,
                                     e.value,
@@ -288,7 +311,9 @@ class _StateLogListViewState extends State<StateLogListView> {
                                   return StateVariableItem(
                                     variableKey: normalized.key,
                                     value: normalized.value,
-                                    lastUpdated: stateData.lastUpdated,
+                                    lastUpdated:
+                                        stateData.argTimestamps[e.key] ??
+                                            stateData.lastUpdated,
                                   );
                                 }),
                               ],
@@ -301,7 +326,7 @@ class _StateLogListViewState extends State<StateLogListView> {
                       children: [
                         StateSectionHeader(
                           title: const Text(
-                            'Page States',
+                            'States',
                             style: InspectorTypography.subhead,
                           ),
                           icon: Icons.data_object,
@@ -311,6 +336,7 @@ class _StateLogListViewState extends State<StateLogListView> {
                             () => _expandedStates[statesKey] =
                                 !(_expandedStates[statesKey] ?? true),
                           ),
+                          lastUpdated: stateData.lastUpdated,
                         ),
                         if (isStatesExpanded)
                           Padding(
@@ -326,134 +352,9 @@ class _StateLogListViewState extends State<StateLogListView> {
                                   return StateVariableItem(
                                     variableKey: normalized.key,
                                     value: normalized.value,
-                                    lastUpdated: stateData.lastUpdated,
-                                  );
-                                }),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  /// Component: mirrors Page structure (outer + inner Parameters and States)
-  Widget? _buildComponentNamespaceSection({
-    required String namespace,
-    required StateData stateData,
-  }) {
-    final argsCount = stateData.args.length;
-    final stateCount = stateData.currentState.length;
-    final totalCount = argsCount + stateCount;
-    if (totalCount == 0) return null;
-
-    final outerKey = 'component:$namespace';
-    final paramsKey = '$outerKey:params';
-    final statesKey = '$outerKey:states';
-
-    final isExpanded = _expandedStates[outerKey] ?? false;
-    final isParamsExpanded = _expandedStates.putIfAbsent(paramsKey, () => true);
-    final isStatesExpanded = _expandedStates.putIfAbsent(statesKey, () => true);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.surfaceBorder),
-        boxShadow: AppElevation.cardShadow,
-      ),
-      child: Column(
-        children: [
-          StateSectionHeader(
-            title: Text(namespace, style: InspectorTypography.headline),
-            icon: Icons.widgets,
-            variableCount: totalCount,
-            isExpanded: isExpanded,
-            onTap: () =>
-                setState(() => _expandedStates[outerKey] = !isExpanded),
-          ),
-          if (isExpanded) ...[
-            const Divider(height: 1),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(0, 4, 0, 8),
-              child: Column(
-                children: [
-                  if (argsCount > 0)
-                    Column(
-                      children: [
-                        StateSectionHeader(
-                          title: const Text(
-                            'Component Parameters',
-                            style: InspectorTypography.subhead,
-                          ),
-                          icon: Icons.tune,
-                          variableCount: argsCount,
-                          isExpanded: isParamsExpanded,
-                          onTap: () => setState(
-                            () => _expandedStates[paramsKey] =
-                                !(_expandedStates[paramsKey] ?? true),
-                          ),
-                        ),
-                        if (isParamsExpanded)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ...stateData.args.entries.map((e) {
-                                  final normalized = _normalizeKeyValue(
-                                    e.key,
-                                    e.value,
-                                  );
-                                  return StateVariableItem(
-                                    variableKey: normalized.key,
-                                    value: normalized.value,
-                                    lastUpdated: stateData.lastUpdated,
-                                  );
-                                }),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  if (stateCount > 0)
-                    Column(
-                      children: [
-                        StateSectionHeader(
-                          title: const Text(
-                            'Component States',
-                            style: InspectorTypography.subhead,
-                          ),
-                          icon: Icons.data_object,
-                          variableCount: stateCount,
-                          isExpanded: isStatesExpanded,
-                          onTap: () => setState(
-                            () => _expandedStates[statesKey] =
-                                !(_expandedStates[statesKey] ?? true),
-                          ),
-                        ),
-                        if (isStatesExpanded)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ...stateData.currentState.entries.map((e) {
-                                  final normalized = _normalizeKeyValue(
-                                    e.key,
-                                    e.value,
-                                  );
-                                  return StateVariableItem(
-                                    variableKey: normalized.key,
-                                    value: normalized.value,
-                                    lastUpdated: stateData.lastUpdated,
+                                    lastUpdated:
+                                        stateData.variableTimestamps[e.key] ??
+                                            stateData.lastUpdated,
                                   );
                                 }),
                               ],
@@ -498,6 +399,7 @@ class _StateLogListViewState extends State<StateLogListView> {
             isExpanded: isExpanded,
             onTap: () =>
                 setState(() => _expandedStates[outerKey] = !isExpanded),
+            lastUpdated: stateData.lastUpdated,
           ),
           if (isExpanded) ...[
             const Divider(height: 1),
@@ -511,7 +413,8 @@ class _StateLogListViewState extends State<StateLogListView> {
                     return StateVariableItem(
                       variableKey: normalized.key,
                       value: normalized.value,
-                      lastUpdated: stateData.lastUpdated,
+                      lastUpdated: stateData.variableTimestamps[e.key] ??
+                          stateData.lastUpdated,
                     );
                   }),
                 ],
@@ -526,14 +429,14 @@ class _StateLogListViewState extends State<StateLogListView> {
   // =============== Helpers ===============
 
   Widget _buildBottomBar(Map<StateType, Map<String, StateData>> groupedStates) {
-    // Calculate total namespaces across all state types
-    var totalNamespaces = 0;
     var totalVariables = 0;
+    final totalNamespaces =
+        groupedStates.values.fold<int>(0, (a, b) => a + b.length);
 
     for (final typeMap in groupedStates.values) {
-      totalNamespaces += typeMap.length;
       for (final stateData in typeMap.values) {
-        totalVariables += stateData.currentState.length + stateData.args.length;
+        totalVariables +=
+            stateData.currentState.length + stateData.argData.length;
       }
     }
 
@@ -590,8 +493,8 @@ class _StateLogListViewState extends State<StateLogListView> {
     return MapEntry(key, value);
   }
 
-  /// Groups state logs by type and namespace, keeping only the latest state
-  /// for each variable
+  /// Groups state logs by type and namespace, tracking lifecycle properly
+  /// to show current active state while preserving navigation history
   Map<StateType, Map<String, StateData>> _groupStatesByTypeAndNamespace(
     List<StateLog> logs,
   ) {
@@ -602,36 +505,87 @@ class _StateLogListViewState extends State<StateLogListView> {
       StateType.stateContainer: {},
     };
 
-    // Sort logs by timestamp (newest first)
-    logs.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    // Sort logs by timestamp (chronological order - oldest first)
+    logs.sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
+    // Track namespace lifecycle: key = "stateType:namespace",
+    // value = last event timestamp and status
+    final namespaceStatus = <String, (DateTime, bool)>{};
+
+    // First pass: determine final status of each namespace
     for (final log in logs) {
       final namespace = log.namespace ?? 'Unknown';
+      final key = '${log.stateType.value}:$namespace';
+
+      if (log.stateEventType == StateEventType.create) {
+        // Mark as active - latest create event wins
+        final existing = namespaceStatus[key];
+        if (existing == null || log.timestamp.isAfter(existing.$1)) {
+          namespaceStatus[key] = (log.timestamp, true);
+        }
+      } else if (log.stateEventType == StateEventType.dispose) {
+        // Mark as disposed - latest dispose event wins
+        final existing = namespaceStatus[key];
+        if (existing == null || log.timestamp.isAfter(existing.$1)) {
+          namespaceStatus[key] = (log.timestamp, false);
+        }
+      } else if (log.stateEventType == StateEventType.change) {
+        // Change events don't affect lifecycle status, but ensure namespace exists
+        if (!namespaceStatus.containsKey(key)) {
+          namespaceStatus[key] =
+              (log.timestamp, true); // Assume active if not seen before
+        }
+      }
+    }
+
+    // Second pass: process logs for currently active namespaces
+    for (final log in logs.reversed) {
+      // Skip dispose events (they don't contribute to current state)
+      if (log.stateEventType == StateEventType.dispose) {
+        continue;
+      }
+
+      final namespace = log.namespace ?? 'Unknown';
       final stateType = log.stateType;
+      final key = '${stateType.value}:$namespace';
+
+      // Only show namespaces that are currently active (not disposed)
+      final status = namespaceStatus[key];
+      if (status == null || !status.$2) {
+        continue;
+      }
 
       grouped[stateType] ??= {};
       grouped[stateType]![namespace] ??= StateData();
 
       final stateData = grouped[stateType]![namespace]!;
 
-      // Update args with the latest values (mostly from create event)
-      if (log.args != null) {
-        for (final entry in log.args!.entries) {
-          if (!stateData.args.containsKey(entry.key) ||
-              log.timestamp.isAfter(stateData.lastUpdated)) {
-            stateData.args[entry.key] = entry.value;
-            stateData.lastUpdated = log.timestamp;
+      // Update args with the latest values (from page/component create events)
+      if (log.argData != null) {
+        for (final entry in log.argData!.entries) {
+          final existingTimestamp = stateData.argTimestamps[entry.key];
+          if (existingTimestamp == null ||
+              log.timestamp.isAfter(existingTimestamp)) {
+            stateData.argData[entry.key] = entry.value;
+            stateData.argTimestamps[entry.key] = log.timestamp;
+            if (log.timestamp.isAfter(stateData.lastUpdated)) {
+              stateData.lastUpdated = log.timestamp;
+            }
           }
         }
       }
 
-      // Update current state with the latest values
+      // Update current state with the latest values (from state context events)
       if (log.stateData != null) {
         for (final entry in log.stateData!.entries) {
-          if (!stateData.currentState.containsKey(entry.key) ||
-              log.timestamp.isAfter(stateData.lastUpdated)) {
+          final existingTimestamp = stateData.variableTimestamps[entry.key];
+          if (existingTimestamp == null ||
+              log.timestamp.isAfter(existingTimestamp)) {
             stateData.currentState[entry.key] = entry.value;
-            stateData.lastUpdated = log.timestamp;
+            stateData.variableTimestamps[entry.key] = log.timestamp;
+            if (log.timestamp.isAfter(stateData.lastUpdated)) {
+              stateData.lastUpdated = log.timestamp;
+            }
           }
         }
       }

@@ -10,6 +10,8 @@ class StateSectionHeader extends StatelessWidget {
     required this.variableCount,
     required this.isExpanded,
     required this.onTap,
+    this.lastUpdated,
+    this.freshnessDuration = const Duration(seconds: 2),
     super.key,
   });
 
@@ -28,8 +30,18 @@ class StateSectionHeader extends StatelessWidget {
   /// On tap
   final VoidCallback onTap;
 
+  /// Optional last updated timestamp used to show a transient
+  /// "Updated just now" badge. If null, no badge is shown.
+  final DateTime? lastUpdated;
+
+  /// Duration within which the update badge is considered fresh.
+  final Duration freshnessDuration;
+
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final showUpdatedBadge = lastUpdated != null &&
+        now.difference(lastUpdated!) <= freshnessDuration;
     return InkWell(
       onTap: onTap,
       borderRadius: AppBorderRadius.radiusMD,
@@ -51,6 +63,27 @@ class StateSectionHeader extends StatelessWidget {
                 color: AppColors.contentSecondary,
               ),
             ),
+            if (showUpdatedBadge) ...[
+              const SizedBox(width: AppSpacing.sm),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.xs,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  // Use withValues instead of deprecated withOpacity
+                  color: AppColors.accent.withValues(alpha: 0.12),
+                  borderRadius: AppBorderRadius.radiusSM,
+                ),
+                child: Text(
+                  'Updated just now',
+                  style: InspectorTypography.caption1.copyWith(
+                    color: AppColors.accent,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
             const Spacer(),
             Icon(
               isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,

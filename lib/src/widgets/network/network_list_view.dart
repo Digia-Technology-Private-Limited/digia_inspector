@@ -122,17 +122,13 @@ class _NetworkListViewState extends State<NetworkListView> {
             const SizedBox(height: AppSpacing.md),
             Text(
               message,
-              style: InspectorTypography.headline.copyWith(
-                color: AppColors.contentSecondary,
-              ),
+              style: const TextStyle(fontSize: 16, color: Colors.grey),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               subtitle,
-              style: InspectorTypography.subhead.copyWith(
-                color: AppColors.contentTertiary,
-              ),
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
               textAlign: TextAlign.center,
             ),
           ],

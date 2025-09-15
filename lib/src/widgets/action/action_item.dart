@@ -42,7 +42,7 @@ class _ActionItemState extends State<ActionItem> {
         builder: (context, allLogs, child) {
           // Get the current version of the action (in case it was updated)
           final currentAction = widget.actionLogManager!.getById(
-            widget.action.eventId,
+            widget.action.id,
           );
           if (currentAction == null) {
             // Action was deleted, return empty container
@@ -138,8 +138,37 @@ class _ActionItemState extends State<ActionItem> {
         _buildStatusIndicator(currentAction),
         const SizedBox(width: AppSpacing.sm),
         Expanded(child: _buildActionInfo(currentAction)),
+        if (currentAction.triggerName != null) ...[
+          _buildTriggerChip(),
+          const SizedBox(width: AppSpacing.sm),
+        ],
         _buildExpandIcon(),
       ],
+    );
+  }
+
+  Widget _buildTriggerChip() {
+    final triggerName = widget.action.triggerName;
+    // Display trigger name in a pill-shaped container
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xs,
+        vertical: 4,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.accent,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.accent,
+        ),
+      ),
+      child: Text(
+        triggerName ?? 'Unknown',
+        style: InspectorTypography.caption2.copyWith(
+          color: AppColors.backgroundSecondary,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
     );
   }
 
@@ -241,7 +270,7 @@ class _ActionItemState extends State<ActionItem> {
                 color: AppColors.contentSecondary,
               ),
             ),
-            if (currentAction.sourceChain.isNotEmpty) ...[
+            if (currentAction.sourceChain?.isNotEmpty ?? false) ...[
               const SizedBox(width: AppSpacing.sm),
               const Icon(
                 Icons.link,
@@ -251,7 +280,7 @@ class _ActionItemState extends State<ActionItem> {
               const SizedBox(width: 2),
               Expanded(
                 child: Text(
-                  currentAction.sourceChain.last,
+                  currentAction.sourceChain?.last ?? 'Unknown',
                   style: InspectorTypography.footnote.copyWith(
                     color: AppColors.contentSecondary,
                   ),
@@ -304,8 +333,6 @@ class _ActionItemState extends State<ActionItem> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (currentAction.sourceChain.isNotEmpty)
-          _buildSourceChain(currentAction),
         if (currentAction.resolvedParameters.isNotEmpty)
           _buildParameters(currentAction),
         if (currentAction.actionDefinition.isNotEmpty)
@@ -315,57 +342,23 @@ class _ActionItemState extends State<ActionItem> {
     );
   }
 
-  Widget _buildSourceChain(ActionLog currentAction) {
-    return _buildDetailSection(
-      'Widget Hierarchy',
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: currentAction.sourceChain
-            .map(
-              (source) => Padding(
-                padding: const EdgeInsets.only(bottom: 2),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.arrow_right,
-                      size: AppIconSizes.xs,
-                      color: AppColors.contentTertiary,
-                    ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Expanded(
-                      child: Text(
-                        source,
-                        style: InspectorTypography.caption1.copyWith(
-                          color: AppColors.contentSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            )
-            .toList(),
-      ),
-    );
-  }
-
   Widget _buildParameters(ActionLog currentAction) {
     return _buildDetailSection(
-      'Parameters',
+      'Resolved Parameters',
       _buildJsonView(currentAction.resolvedParameters),
     );
   }
 
   Widget _buildDefinition(ActionLog currentAction) {
     return _buildDetailSection(
-      'Definition',
+      'Action Definition',
       _buildJsonView(currentAction.actionDefinition),
     );
   }
 
   Widget _buildMetadata(ActionLog currentAction) {
     return _buildDetailSection(
-      'Metadata',
+      'Action Metadata',
       _buildJsonView(currentAction.metadata),
     );
   }

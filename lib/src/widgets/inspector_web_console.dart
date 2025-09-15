@@ -3,7 +3,7 @@ import 'package:digia_inspector/src/models/network_log_ui_entry.dart';
 import 'package:digia_inspector/src/state/inspector_controller.dart';
 import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:digia_inspector/src/widgets/action/action_detail_view.dart';
-import 'package:digia_inspector/src/widgets/action/action_list_view.dart';
+import 'package:digia_inspector/src/widgets/action/action_log_list_view.dart';
 import 'package:digia_inspector/src/widgets/common/inspector_app_bar.dart';
 import 'package:digia_inspector/src/widgets/common/inspector_tab_bar.dart';
 import 'package:digia_inspector/src/widgets/network/network_detail_view.dart';
@@ -183,12 +183,12 @@ class _InspectorWebConsoleState extends State<InspectorWebConsole>
   }
 
   Widget _buildActionsTab() {
-    return ActionListView(
+    return ActionLogListView(
       actionLogManager: widget.controller.actionLogManager,
       onClearLogs: _clearLogs,
       onItemTap: (flow) {
         setState(() {
-          _selectedActionFlowId = flow.eventId;
+          _selectedActionFlowId = flow.id;
           _selectedNetworkLogId = null;
         });
       },

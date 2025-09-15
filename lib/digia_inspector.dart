@@ -42,7 +42,7 @@ export 'src/theme/theme_system.dart';
 export 'src/utils/action_utils.dart';
 export 'src/widgets/action/action_detail_view.dart';
 export 'src/widgets/action/action_item.dart';
-export 'src/widgets/action/action_list_view.dart';
+export 'src/widgets/action/action_log_list_view.dart';
 export 'src/widgets/inspector_console.dart';
 export 'src/widgets/inspector_mobile_console.dart';
 export 'src/widgets/inspector_web_console.dart';

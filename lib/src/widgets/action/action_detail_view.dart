@@ -3,7 +3,6 @@ import 'package:digia_inspector/src/theme/app_colors.dart';
 import 'package:digia_inspector/src/theme/app_dimensions.dart';
 import 'package:digia_inspector/src/theme/app_typography.dart';
 import 'package:digia_inspector/src/utils/action_utils.dart';
-import 'package:digia_inspector/src/utils/extensions.dart';
 import 'package:digia_inspector/src/widgets/action/action_item.dart';
 import 'package:digia_inspector_core/digia_inspector_core.dart';
 import 'package:flutter/material.dart';
@@ -44,7 +43,7 @@ class _ActionDetailViewState extends State<ActionDetailView> {
       builder: (context, allLogs, child) {
         // Get the current version of the flow (in case it was updated)
         final currentFlow = widget.actionLogManager.getById(
-          widget.flow.eventId,
+          widget.flow.id,
         );
         if (currentFlow == null) {
           // Flow was deleted, close the bottom sheet
@@ -145,7 +144,7 @@ class _ActionDetailViewState extends State<ActionDetailView> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (currentFlow.sourceChain.isNotEmpty)
+                if (currentFlow.sourceChain?.isNotEmpty ?? false)
                   Text(
                     currentFlow.formattedSourceChain,
                     style: InspectorTypography.subhead.copyWith(
@@ -203,28 +202,11 @@ class _ActionDetailViewState extends State<ActionDetailView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Flow Information',
-            style: InspectorTypography.title3.copyWith(
-              color: AppColors.contentPrimary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _buildInfoRow('Trigger', currentFlow.triggerName),
+          _buildInfoRow('Trigger', currentFlow.triggerName ?? 'Unknown'),
           _buildInfoRow('Status', currentFlow.status.name),
-          _buildInfoRow(
-            'Actions',
-            '${widget.actionLogManager.countActions(currentFlow.eventId)}',
-          ),
-          _buildInfoRow(
-            'Progress',
-            // Progress data is a dynamic map
-            // ignore: avoid_dynamic_calls
-            '${(currentFlow.progressData?['progress'] ?? 0) * 100}%',
-          ),
-          _buildInfoRow('Timestamp', currentFlow.timestamp.networkLogFormat),
-          if (currentFlow.sourceChain.isNotEmpty)
-            _buildInfoSection('Widget Hierarchy', currentFlow.sourceChain),
+          if (currentFlow.sourceChain?.isNotEmpty ?? false)
+            _buildInfoSection(
+                'Widget Hierarchy', currentFlow.sourceChain ?? []),
         ],
       ),
     );
@@ -242,20 +224,15 @@ class _ActionDetailViewState extends State<ActionDetailView> {
               label,
               style: InspectorTypography.subhead.copyWith(
                 color: AppColors.contentSecondary,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
           Expanded(
-            child: GestureDetector(
-              onTap: () => ClipboardUtils.copyToClipboardWithToast(
-                context,
-                value,
-              ),
-              child: Text(
-                value,
-                style: InspectorTypography.body.copyWith(
-                  color: AppColors.contentPrimary,
-                ),
+            child: Text(
+              value,
+              style: InspectorTypography.body.copyWith(
+                color: AppColors.contentPrimary,
               ),
             ),
           ),
@@ -274,6 +251,7 @@ class _ActionDetailViewState extends State<ActionDetailView> {
             label,
             style: InspectorTypography.subhead.copyWith(
               color: AppColors.contentSecondary,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -306,40 +284,46 @@ class _ActionDetailViewState extends State<ActionDetailView> {
   }
 
   Widget _buildActionsList(ActionLog currentFlow) {
-    final children = widget.actionLogManager.getChildren(currentFlow.eventId);
+    final total = widget.actionLogManager.countActionsInFlow(currentFlow.id);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Actions (${children.length + 1})', // +1 for the parent action
+          'Actions ($total)',
           style: InspectorTypography.title3.copyWith(
             color: AppColors.contentPrimary,
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        // Show parent action first
-        ActionItem(
-          action: currentFlow,
-          actionLogManager: widget.actionLogManager,
-        ),
-        // Show child actions with indentation
-        ...children.asMap().entries.map((entry) {
-          final index = entry.key;
-          final action = entry.value;
-          return Padding(
-            padding: EdgeInsets.only(
-              top: AppSpacing.sm,
-              bottom: index < children.length - 1 ? AppSpacing.sm : 0,
-            ),
-            child: ActionItem(
-              action: action,
-              isChild: true,
-              actionLogManager: widget.actionLogManager,
-            ),
-          );
-        }),
+        ..._buildActionTree(currentFlow, depth: 0),
       ],
     );
+  }
+
+  /// Build the full action tree recursively, returning a list of widgets
+  /// with indentation based on depth.
+  List<Widget> _buildActionTree(ActionLog node, {required int depth}) {
+    final widgets = <Widget>[];
+
+    final extraLeftIndent = depth > 1 ? (AppSpacing.lg * (depth - 1)) : 0.0;
+    widgets.add(Padding(
+      padding: EdgeInsets.only(
+        top: depth == 0 ? 0 : AppSpacing.sm,
+        left: extraLeftIndent,
+      ),
+      child: ActionItem(
+        action: node,
+        isChild: depth > 0,
+        actionLogManager: widget.actionLogManager,
+      ),
+    ));
+
+    final children = widget.actionLogManager.getChildren(node.id);
+    for (final child in children) {
+      widgets.addAll(_buildActionTree(child, depth: depth + 1));
+    }
+
+    return widgets;
   }
 }

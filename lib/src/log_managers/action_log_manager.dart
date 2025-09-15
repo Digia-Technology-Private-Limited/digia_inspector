@@ -23,7 +23,7 @@ class ActionLogManager extends ChangeNotifier {
 
   /// Insert or update a log
   void upsert(ActionLog log) {
-    _logs[log.eventId] = log;
+    _logs[log.id] = log;
     _updateNotifiers();
     notifyListeners();
   }
@@ -46,19 +46,21 @@ class ActionLogManager extends ChangeNotifier {
 
   /// Root flows = logs with no parent (top-level actions/flows)
   List<ActionLog> get rootFlows {
-    return allLogs.where((log) => log.parentEventId == null).toList();
+    return allLogs.where((log) => log.parentActionId == null).toList();
   }
 
   /// Get all root flows (actions that are not children of other actions)
   List<ActionLog> get topLevelActions {
     // Get all logs that have no parent (parentEventId is null)
-    final rootLogs = allLogs.where((log) => log.parentEventId == null).toList();
+    final rootLogs =
+        allLogs.where((log) => log.parentActionId == null).toList();
 
     // Also get logs that are children but their parent doesn't exist
     // This handles the case where a child action is created before its parent
     final orphanedChildLogs = <ActionLog>[];
     for (final log in allLogs) {
-      if (log.parentEventId != null && !_logs.containsKey(log.parentEventId)) {
+      if (log.parentActionId != null &&
+          !_logs.containsKey(log.parentActionId)) {
         // This is a child whose parent doesn't exist - treat as top-level
         orphanedChildLogs.add(log);
       }
@@ -76,7 +78,7 @@ class ActionLogManager extends ChangeNotifier {
   /// Get children of a given log (newest first)
   List<ActionLog> getChildren(String parentId) {
     final children = _logs.values
-        .where((log) => log.parentEventId == parentId)
+        .where((log) => log.parentActionId == parentId)
         .toList()
       ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
     return children;
@@ -85,17 +87,30 @@ class ActionLogManager extends ChangeNotifier {
   /// Count all actions that belong to the same action flow
   int countActions(String actionId) {
     // Count all logs that belong to the same action flow
-    final actionLogs = _logs.values.where((log) => log.actionId == actionId);
+    final actionLogs = _logs.values.where((log) => log.id == actionId);
 
     // Also include logs where this actionId is their parent's actionId
     final childLogs = _logs.values.where((log) {
-      if (log.parentEventId == null) return false;
-      final parent = _logs[log.parentEventId];
-      return parent?.actionId == actionId;
+      if (log.parentActionId == null) return false;
+      final parent = _logs[log.parentActionId];
+      return parent?.id == actionId;
     });
 
     final allRelatedLogs = <ActionLog>{...actionLogs, ...childLogs};
     return allRelatedLogs.length;
+  }
+
+  /// Recursively count all actions in a flow starting from [rootEventId].
+  ///
+  /// This includes the root action itself and all of its descendants at any
+  /// depth level. Use this for accurate counts in the UI.
+  int countActionsInFlow(String rootEventId) {
+    int total = 1; // include root
+    final children = getChildren(rootEventId);
+    for (final child in children) {
+      total += countActionsInFlow(child.id);
+    }
+    return total;
   }
 
   /// Count all child actions that belong to the same action flow
@@ -105,7 +120,7 @@ class ActionLogManager extends ChangeNotifier {
 
     var total = children.length;
     for (final child in children) {
-      total += countChildActions(child.eventId);
+      total += countChildActions(child.id);
     }
     return total;
   }
@@ -130,13 +145,13 @@ class ActionLogManager extends ChangeNotifier {
     Set<String> processed,
     int depth,
   ) {
-    if (processed.contains(log.eventId)) return;
+    if (processed.contains(log.id)) return;
 
-    processed.add(log.eventId);
+    processed.add(log.id);
     result.add(log);
 
     // Add children
-    final children = getChildren(log.eventId);
+    final children = getChildren(log.id);
     for (final child in children) {
       _addLogHierarchically(result, child, processed, depth + 1);
     }

@@ -2,7 +2,7 @@ import 'package:digia_inspector/src/log_managers/network_log_manager.dart';
 import 'package:digia_inspector/src/models/network_log_ui_entry.dart';
 import 'package:digia_inspector/src/state/inspector_controller.dart';
 import 'package:digia_inspector/src/theme/theme_system.dart';
-import 'package:digia_inspector/src/widgets/action/action_list_view.dart';
+import 'package:digia_inspector/src/widgets/action/action_log_list_view.dart';
 import 'package:digia_inspector/src/widgets/common/inspector_app_bar.dart';
 import 'package:digia_inspector/src/widgets/common/inspector_tab_bar.dart';
 import 'package:digia_inspector/src/widgets/network/network_list_view.dart';
@@ -137,7 +137,7 @@ class _InspectorMobileConsoleState extends State<InspectorMobileConsole>
   }
 
   Widget _buildActionsTab() {
-    return ActionListView(
+    return ActionLogListView(
       actionLogManager: widget.controller.actionLogManager,
       onClearLogs: _clearLogs,
     );

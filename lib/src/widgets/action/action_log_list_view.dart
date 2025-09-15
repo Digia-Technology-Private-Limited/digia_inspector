@@ -7,10 +7,10 @@ import 'package:digia_inspector/src/widgets/action/action_list_item.dart';
 import 'package:digia_inspector_core/digia_inspector_core.dart';
 import 'package:flutter/material.dart';
 
-/// Mobile-first action list view matching the UI design
-class ActionListView extends StatefulWidget {
+/// Action log list view
+class ActionLogListView extends StatefulWidget {
   /// Constructor
-  const ActionListView({
+  const ActionLogListView({
     required this.actionLogManager,
     super.key,
     this.onClearLogs,
@@ -27,10 +27,10 @@ class ActionListView extends StatefulWidget {
   final ValueChanged<ActionLog>? onItemTap;
 
   @override
-  State<ActionListView> createState() => _ActionListViewState();
+  State<ActionLogListView> createState() => _ActionLogListViewState();
 }
 
-class _ActionListViewState extends State<ActionListView> {
+class _ActionLogListViewState extends State<ActionLogListView> {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<List<ActionLog>>(
@@ -58,9 +58,9 @@ class _ActionListViewState extends State<ActionListView> {
     final latestActionsByActionId = <String, ActionLog>{};
 
     for (final action in actions) {
-      final existing = latestActionsByActionId[action.actionId];
+      final existing = latestActionsByActionId[action.id];
       if (existing == null || action.timestamp.isAfter(existing.timestamp)) {
-        latestActionsByActionId[action.actionId] = action;
+        latestActionsByActionId[action.id] = action;
       }
     }
 
@@ -94,31 +94,27 @@ class _ActionListViewState extends State<ActionListView> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
+    return const Center(
       child: Padding(
         padding: AppSpacing.paddingXL,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.play_circle_outline,
               size: 64,
               color: AppColors.contentTertiary,
             ),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
             Text(
               'No actions logged',
-              style: InspectorTypography.headline.copyWith(
-                color: AppColors.contentSecondary,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppSpacing.sm),
+            SizedBox(height: AppSpacing.sm),
             Text(
               'Action logs will appear here when your app performs actions',
-              style: InspectorTypography.subhead.copyWith(
-                color: AppColors.contentTertiary,
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.grey),
               textAlign: TextAlign.center,
             ),
           ],
@@ -135,7 +131,7 @@ class _ActionListViewState extends State<ActionListView> {
     final totalActionCount = groupedActions.fold<int>(
       0,
       (sum, action) =>
-          sum + widget.actionLogManager.countActions(action.actionId),
+          sum + widget.actionLogManager.countActionsInFlow(action.id),
     );
 
     return Container(

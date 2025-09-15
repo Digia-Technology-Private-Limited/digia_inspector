@@ -1,5 +1,6 @@
 import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:digia_inspector/src/utils/extensions.dart';
+import 'package:digia_inspector/src/widgets/common/json_view.dart';
 import 'package:flutter/material.dart';
 
 /// Widget for displaying a single state variable with its value, type,
@@ -61,34 +62,11 @@ class StateVariableItem extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                if (type == 'object')
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.chevron_right,
-                        size: AppIconSizes.sm,
-                        color: AppColors.contentSecondary,
-                      ),
-                      const SizedBox(width: AppSpacing.xs),
-                      Text(
-                        formattedValue,
-                        style: InspectorTypography.subhead.copyWith(
-                          color: AppColors.contentPrimary,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      InkWell(
-                        onTap: () => ClipboardUtils.copyToClipboardWithToast(
-                          context,
-                          formattedValue,
-                        ),
-                        child: const Icon(
-                          Icons.copy,
-                          size: AppIconSizes.sm,
-                          color: AppColors.contentSecondary,
-                        ),
-                      ),
-                    ],
+                if (value is Map || value is List)
+                  JsonView(
+                    value: value,
+                    inline: true,
+                    showCopyButton: false,
                   )
                 else
                   Text(
@@ -98,6 +76,19 @@ class StateVariableItem extends StatelessWidget {
                     ),
                   ),
               ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          InkWell(
+            onTap: () => ClipboardUtils.copyToClipboardWithToast(
+              context,
+              value.toString(),
+              customMessage: 'Value copied',
+            ),
+            child: const Icon(
+              Icons.copy,
+              size: 14,
+              color: AppColors.contentSecondary,
             ),
           ),
           const SizedBox(width: AppSpacing.sm),

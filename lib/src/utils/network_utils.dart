@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:digia_inspector/src/log_managers/network_log_manager.dart';
 import 'package:digia_inspector/src/models/network_log_ui_entry.dart';
 import 'package:digia_inspector/src/theme/app_colors.dart';
@@ -199,6 +201,17 @@ class NetworkLogUtils {
       }
     } on Exception catch (_) {
       return jsonData.toString();
+    }
+  }
+
+  /// Attempts to decode a JSON string into Map or List. Returns null if invalid
+  static dynamic tryDecodeJson(String raw) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map || decoded is List) return decoded;
+      return null;
+    } on Exception catch (_) {
+      return null;
     }
   }
 
