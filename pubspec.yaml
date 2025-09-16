@@ -26,7 +26,8 @@ dependencies:
     git:
       url: git@github.com:Digia-Technology-Private-Limited/digia_inspector_core.git
       ref: main
-    # path: ../digia_inspector_core
+  # digia_inspector_core:
+  #   path: ../digia_inspector_core
   dio: ^5.9.0
   flutter:
     sdk: flutter

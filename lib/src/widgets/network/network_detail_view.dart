@@ -5,6 +5,9 @@ import 'package:digia_inspector/src/utils/extensions.dart';
 import 'package:digia_inspector/src/utils/network_utils.dart';
 import 'package:digia_inspector/src/widgets/common/json_view.dart';
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer.dart';
 
 /// Widget for displaying detailed network request information
 class NetworkDetailView extends StatefulWidget {
@@ -474,7 +477,6 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
     required String title,
     required dynamic content,
   }) {
-    // Attempt to parse JSON-like strings for better structured display
     dynamic value = content;
     if (content is String) {
       try {
@@ -483,90 +485,27 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
         value = content;
       }
     }
-
-    // If primitive or string that isn't JSON, keep previous styling but with copy
-    final isComplex = value is Map || value is List;
-    if (!isComplex) {
-      final textValue = value.toString();
-      return Container(
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: AppColors.separator,
+      String pretty;
+      try {
+        pretty = const JsonEncoder.withIndent('  ').convert(value);
+      } on Exception catch (_) {
+        pretty = value.toString();
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: InspectorTypography.subheadBold.copyWith(
+              color: AppColors.contentPrimary,
+            ),
           ),
-          borderRadius: AppBorderRadius.radiusMD,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: AppSpacing.paddingSM,
-              decoration: const BoxDecoration(
-                color: AppColors.backgroundPrimary,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(AppBorderRadius.md),
-                  topRight: Radius.circular(AppBorderRadius.md),
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.code,
-                    size: AppIconSizes.sm,
-                    color: AppColors.contentSecondary,
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    title,
-                    style: InspectorTypography.footnoteBold.copyWith(
-                      color: AppColors.contentPrimary,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => ClipboardUtils.copyToClipboardWithToast(
-                      context,
-                      textValue,
-                    ),
-                    icon: const Icon(
-                      Icons.copy,
-                      size: AppIconSizes.sm,
-                      color: AppColors.contentSecondary,
-                    ),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              width: double.infinity,
-              padding: AppSpacing.paddingSM,
-              child: SelectableText(
-                textValue,
-                style: InspectorTypography.monospace.copyWith(
-                  color: AppColors.contentPrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
+          const SizedBox(height: AppSpacing.xs),
+          MonacoJsonViewer(
+            content: pretty,
+          ),
+        ],
       );
-    }
-
-    // Structured JSON content via JsonView
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: InspectorTypography.subheadBold.copyWith(
-            color: AppColors.contentPrimary,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        JsonView(value: value),
-      ],
-    );
   }
 
   Widget _buildErrorSection(NetworkLogUIEntry log) {
