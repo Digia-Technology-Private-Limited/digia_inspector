@@ -15,7 +15,7 @@ class StateData {
   /// Arguments/parameters captured at creation time (e.g., pageArgs, componentArgs)
   final Map<String, dynamic> argData = {};
 
-  /// Last updated timestamp per variable (key = variable name, value = timestamp)
+  /// Last updated timestamp per variable
   final Map<String, DateTime> variableTimestamps = {};
 
   /// Last updated timestamp for args
@@ -530,7 +530,7 @@ class _StateLogListViewState extends State<StateLogListView> {
           namespaceStatus[key] = (log.timestamp, false);
         }
       } else if (log.stateEventType == StateEventType.change) {
-        // Change events don't affect lifecycle status, but ensure namespace exists
+        // Change events don't affect lifecycle status, ensure namespace exists
         if (!namespaceStatus.containsKey(key)) {
           namespaceStatus[key] =
               (log.timestamp, true); // Assume active if not seen before

@@ -105,7 +105,7 @@ class ActionLogManager extends ChangeNotifier {
   /// This includes the root action itself and all of its descendants at any
   /// depth level. Use this for accurate counts in the UI.
   int countActionsInFlow(String rootEventId) {
-    int total = 1; // include root
+    var total = 1; // include root
     final children = getChildren(rootEventId);
     for (final child in children) {
       total += countActionsInFlow(child.id);

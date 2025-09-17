@@ -479,12 +479,12 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
     if (content is String) {
       try {
         value = NetworkLogUtils.tryDecodeJson(content) ?? content;
-      } catch (_) {
+      } on Exception catch (_) {
         value = content;
       }
     }
 
-    // If primitive or string that isn't JSON, keep previous styling but with copy
+    // If primitive or string that isn't JSON, keep previous style but with copy
     final isComplex = value is Map || value is List;
     if (!isComplex) {
       final textValue = value.toString();
