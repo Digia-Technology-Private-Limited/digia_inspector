@@ -7,7 +7,7 @@ import 'package:digia_inspector/src/widgets/common/json_view.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_stub.dart'
+import 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_mobile.dart'
     if (dart.library.js) 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_web.dart';
 
 /// Widget for displaying detailed network request information
