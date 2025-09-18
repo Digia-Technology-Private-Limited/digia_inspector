@@ -12,9 +12,6 @@ topics:
     monitoring,
     networking,
     observability,
-    digia,
-    inspector,
-    console,
   ]
 
 environment:
