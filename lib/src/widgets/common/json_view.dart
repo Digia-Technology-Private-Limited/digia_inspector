@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 /// - Collapsed preview up to an initial [collapsedDepth]
 /// - Stable ordering of Map keys (alphabetical) for deterministic UI and copy
 /// - Copy button copies the full canonical JSON (NOT the truncated preview)
-/// - Handles primitives, nulls, long strings (with expansion), and circular refs defensively
+/// - Handles primitives, nulls, long strings (with expansion)
 /// - Adheres to digia design system (colors, spacing, typography)
 class JsonView extends StatefulWidget {
   /// Create a JSON view for a dynamic value (Map/List/primitives)
@@ -49,7 +49,6 @@ class JsonView extends StatefulWidget {
 
 class _JsonViewState extends State<JsonView> {
   late final String _fullJsonString;
-  final Set<_IdentityWrapper> _visited = {};
 
   @override
   void initState() {
@@ -171,12 +170,6 @@ class _JsonViewState extends State<JsonView> {
 
   Widget _buildMap(Map<dynamic, dynamic> map, int depth,
       {bool isRoot = false}) {
-    final idWrap = _IdentityWrapper(map);
-    if (_visited.contains(idWrap)) {
-      return _circularRefTag('Map');
-    }
-    _visited.add(idWrap);
-
     final sortedKeys = map.keys.map((e) => e.toString()).toList()..sort();
     final length = sortedKeys.length;
     final collapsed = depth >= widget.collapsedDepth && !isRoot;
@@ -191,7 +184,7 @@ class _JsonViewState extends State<JsonView> {
     }
 
     return _CollapsibleNode(
-      headerBuilder: (context, isExpanded) => _collectionHeader(
+      headerBuilder: (context, {bool isExpanded = false}) => _collectionHeader(
         '{',
         '}',
         'object',
@@ -231,12 +224,6 @@ class _JsonViewState extends State<JsonView> {
   }
 
   Widget _buildList(List<dynamic> list, int depth, {bool isRoot = false}) {
-    final idWrap = _IdentityWrapper(list);
-    if (_visited.contains(idWrap)) {
-      return _circularRefTag('List');
-    }
-    _visited.add(idWrap);
-
     final length = list.length;
     final collapsed = depth >= widget.collapsedDepth && !isRoot;
     if (length == 0) {
@@ -248,7 +235,7 @@ class _JsonViewState extends State<JsonView> {
       );
     }
     return _CollapsibleNode(
-      headerBuilder: (context, isExpanded) => _collectionHeader(
+      headerBuilder: (context, {bool isExpanded = false}) => _collectionHeader(
         '[',
         ']',
         'array',
@@ -312,32 +299,12 @@ class _JsonViewState extends State<JsonView> {
     );
   }
 
-  Widget _circularRefTag(String type) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.xs,
-        vertical: 2,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.statusWarning.withValues(alpha: 0.15),
-        borderRadius: AppBorderRadius.radiusSM,
-      ),
-      child: Text(
-        '<circular $type>',
-        style: InspectorTypography.monospace.copyWith(
-          color: AppColors.statusWarning,
-          fontSize: 11,
-        ),
-      ),
-    );
-  }
-
   String _stringify(dynamic value) {
     try {
       final normalized = _normalize(value, {});
       const encoder = JsonEncoder.withIndent('  ');
       return encoder.convert(normalized);
-    } catch (_) {
+    } on Exception catch (_) {
       return value.toString();
     }
   }
@@ -371,7 +338,7 @@ class _CollapsibleNode extends StatefulWidget {
     required this.initiallyExpanded,
   });
 
-  final Widget Function(BuildContext, bool isExpanded) headerBuilder;
+  final Widget Function(BuildContext, {bool isExpanded}) headerBuilder;
   final Widget child;
   final bool initiallyExpanded;
 
@@ -395,7 +362,7 @@ class _CollapsibleNodeState extends State<_CollapsibleNode> {
       children: [
         InkWell(
           onTap: () => setState(() => _expanded = !_expanded),
-          child: widget.headerBuilder(context, _expanded),
+          child: widget.headerBuilder(context, isExpanded: _expanded),
         ),
         if (_expanded)
           Padding(
@@ -442,15 +409,4 @@ class _ExpandablePrimitiveState extends State<_ExpandablePrimitive> {
       ),
     );
   }
-}
-
-/// Wrapper to track identity (for circular detection) using referential equality.
-class _IdentityWrapper {
-  const _IdentityWrapper(this.value);
-  final Object value;
-  @override
-  bool operator ==(Object other) =>
-      other is _IdentityWrapper && identical(other.value, value);
-  @override
-  int get hashCode => identityHashCode(value);
 }

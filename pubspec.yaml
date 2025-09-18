@@ -1,6 +1,6 @@
 name: digia_inspector
 description: A comprehensive debug console for Digia applications, providing real-time logging of network requests, state changes, and application events with an intuitive UI.
-version: 0.0.1
+version: 1.0.0
 homepage: https://www.digia.tech
 repository: https://github.com/Digia-Technology-Private-Limited/digia_inspector
 issue_tracker: https://github.com/Digia-Technology-Private-Limited/digia_inspector/issues
@@ -12,22 +12,13 @@ topics:
     monitoring,
     networking,
     observability,
-    digia,
-    inspector,
-    console,
   ]
-publish_to: none
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
 
 dependencies:
-  digia_inspector_core:
-    git:
-      url: git@github.com:Digia-Technology-Private-Limited/digia_inspector_core.git
-      ref: main
-  # digia_inspector_core:
-  #   path: ../digia_inspector_core
+  digia_inspector_core: ^1.0.0
   dio: ^5.9.0
   flutter:
     sdk: flutter

@@ -481,31 +481,31 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
     if (content is String) {
       try {
         value = NetworkLogUtils.tryDecodeJson(content) ?? content;
-      } catch (_) {
+      } on Exception catch (_) {
         value = content;
       }
     }
-      String pretty;
-      try {
-        pretty = const JsonEncoder.withIndent('  ').convert(value);
-      } on Exception catch (_) {
-        pretty = value.toString();
-      }
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: InspectorTypography.subheadBold.copyWith(
-              color: AppColors.contentPrimary,
-            ),
+    String pretty;
+    try {
+      pretty = const JsonEncoder.withIndent('  ').convert(value);
+    } on Exception catch (_) {
+      pretty = value.toString();
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: InspectorTypography.subheadBold.copyWith(
+            color: AppColors.contentPrimary,
           ),
-          const SizedBox(height: AppSpacing.xs),
-          MonacoJsonViewer(
-            content: pretty,
-          ),
-        ],
-      );
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        MonacoJsonViewer(
+          content: pretty,
+        ),
+      ],
+    );
   }
 
   Widget _buildErrorSection(NetworkLogUIEntry log) {
