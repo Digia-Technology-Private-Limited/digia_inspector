@@ -475,39 +475,45 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
   }
 
   Widget _buildContentSection({
-    required String title,
-    required dynamic content,
-  }) {
-    dynamic value = content;
-    if (content is String) {
-      try {
-        value = NetworkLogUtils.tryDecodeJson(content) ?? content;
-      } catch (_) {
-        value = content;
-      }
+  required String title,
+  required dynamic content,
+}) {
+  dynamic value = content;
+  if (content is String) {
+    try {
+      value = NetworkLogUtils.tryDecodeJson(content) ?? content;
+    } catch (_) {
+      value = content;
     }
-      String pretty;
-      try {
-        pretty = const JsonEncoder.withIndent('  ').convert(value);
-      } on Exception catch (_) {
-        pretty = value.toString();
-      }
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: InspectorTypography.subheadBold.copyWith(
-              color: AppColors.contentPrimary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          MonacoJsonViewer(
-            content: pretty,
-          ),
-        ],
-      );
   }
+
+  String pretty;
+  try {
+    pretty = const JsonEncoder.withIndent('  ').convert(value);
+  } on Exception catch (_) {
+    pretty = value.toString();
+  }
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        title,
+        style: InspectorTypography.subheadBold.copyWith(
+          color: AppColors.contentPrimary,
+        ),
+      ),
+      const SizedBox(height: AppSpacing.xs),
+      if (kIsWeb)
+        MonacoJsonViewer(content: pretty)
+      else
+        SizedBox(
+          child: MonacoJsonViewer(content: pretty),
+        ),
+    ],
+  );
+}
+
 
   Widget _buildErrorSection(NetworkLogUIEntry log) {
     return Container(
