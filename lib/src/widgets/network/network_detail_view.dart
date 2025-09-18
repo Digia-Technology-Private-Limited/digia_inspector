@@ -7,7 +7,7 @@ import 'package:digia_inspector/src/widgets/common/json_view.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer.dart';
+import 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_web.dart';
 
 /// Widget for displaying detailed network request information
 class NetworkDetailView extends StatefulWidget {
@@ -481,31 +481,31 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
     if (content is String) {
       try {
         value = NetworkLogUtils.tryDecodeJson(content) ?? content;
-      } on Exception catch (_) {
+      } catch (_) {
         value = content;
       }
     }
-    String pretty;
-    try {
-      pretty = const JsonEncoder.withIndent('  ').convert(value);
-    } on Exception catch (_) {
-      pretty = value.toString();
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: InspectorTypography.subheadBold.copyWith(
-            color: AppColors.contentPrimary,
+      String pretty;
+      try {
+        pretty = const JsonEncoder.withIndent('  ').convert(value);
+      } on Exception catch (_) {
+        pretty = value.toString();
+      }
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: InspectorTypography.subheadBold.copyWith(
+              color: AppColors.contentPrimary,
+            ),
           ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        MonacoJsonViewer(
-          content: pretty,
-        ),
-      ],
-    );
+          const SizedBox(height: AppSpacing.xs),
+          MonacoJsonViewer(
+            content: pretty,
+          ),
+        ],
+      );
   }
 
   Widget _buildErrorSection(NetworkLogUIEntry log) {
