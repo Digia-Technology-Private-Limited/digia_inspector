@@ -40,15 +40,19 @@ class _MonacoJsonViewerState extends State<MonacoJsonViewer> {
     final controller = await MonacoController.create(
       options: const EditorOptions(
         language: MonacoLanguage.json,
-        theme: MonacoTheme.hcLight,
+        theme: MonacoTheme.vs,
         readOnly: true,
         minimap: false,
         fontSize: 12,
         lineNumbers: false,
         automaticLayout: true,
-        scrollBeyondLastLine: true,  
+        scrollBeyondLastLine: false,  
         wordWrap: false,  
-        smoothScrolling: true,           
+        smoothScrolling: true,  
+        insertSpaces: false,
+        lineHeight: 1.3,   
+        padding: {'top': 8, 'bottom': 8},  
+        contextMenu: false     
       ),
     );
 

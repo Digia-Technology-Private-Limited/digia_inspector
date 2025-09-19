@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #editor {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="editor"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs/loader.js"></script>
+    <script>
+        let editor; let instanceId = null;
+        function getInstanceId() { return window.frameElement?.getAttribute('data-instance-id'); }
+        function postMessageToParent(type, payload = {}) { window.parent.postMessage(JSON.stringify({ type, instanceId, ...payload }), '*'); }
+        window.addEventListener('message', (message) => {
+            const data = message.data;
+            try {
+                const obj = typeof data === 'string' ? JSON.parse(data) : data;
+                if (obj && obj.instanceId && instanceId && obj.instanceId !== instanceId) return;
+                switch (obj.action) {
+                    case 'set_value': {
+                        const model = editor?.getModel(); if (model) model.setValue(String(obj.value ?? '')); break;
+                    }
+                    case 'set_theme': { if (typeof obj.theme === 'string') monaco.editor.setTheme(obj.theme); break; }
+                }
+            } catch (e) { /* ignore */ }
+        });
+        require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs' } });
+        require(['vs/editor/editor.main'], function () {
+            instanceId = getInstanceId();
+            editor = monaco.editor.create(document.getElementById('editor'), {
+                value: '', language: 'json', readOnly: true, wordWrap: 'on',
+                scrollBeyondLastLine: false, minimap: { enabled: false }, automaticLayout: true,
+                lineNumbers: 'on', contextmenu: false
+            });
+            postMessageToParent('init');
+        });
+    </script>
+</body>
+
+</html>
