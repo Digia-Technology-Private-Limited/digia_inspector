@@ -12,8 +12,8 @@ import 'package:flutter/material.dart';
 import 'package:web/web.dart' as web;
 
 
-class MonacoJsonViewer extends StatefulWidget {
-  const MonacoJsonViewer({
+class MonacoJsonViewerWeb extends StatefulWidget {
+  const MonacoJsonViewerWeb({
     super.key,
     required this.content,
     this.height,
@@ -27,10 +27,10 @@ class MonacoJsonViewer extends StatefulWidget {
   final bool showCopyButton;
 
   @override
-  State<MonacoJsonViewer> createState() => _MonacoJsonViewerState();
+  State<MonacoJsonViewerWeb> createState() => _MonacoJsonViewerWebState();
 }
 
-class _MonacoJsonViewerState extends State<MonacoJsonViewer> {
+class _MonacoJsonViewerWebState extends State<MonacoJsonViewerWeb> {
   late final String _instanceId;
   web.HTMLIFrameElement? _iframe;
   StreamSubscription<web.MessageEvent>? _sub;
@@ -113,7 +113,7 @@ class _MonacoJsonViewerState extends State<MonacoJsonViewer> {
   }
 
   @override
-  void didUpdateWidget(covariant MonacoJsonViewer oldWidget) {
+  void didUpdateWidget(covariant MonacoJsonViewerWeb oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!kIsWeb) return;
     if (oldWidget.content != widget.content) {
