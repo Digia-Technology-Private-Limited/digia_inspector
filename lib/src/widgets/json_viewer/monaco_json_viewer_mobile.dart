@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_monaco/flutter_monaco.dart';
 
-class MonacoJsonViewerMobile extends StatefulWidget {
+class MonacoJsonViewer extends StatefulWidget {
   final String content;
   final double? height;
   final double? width;
   final bool showCopyButton;
 
-  const MonacoJsonViewerMobile({
+  const MonacoJsonViewer({
     super.key,
     required this.content,
     this.height,
@@ -17,10 +17,10 @@ class MonacoJsonViewerMobile extends StatefulWidget {
   });
 
   @override
-  State<MonacoJsonViewerMobile> createState() => _MonacoJsonViewerMobileState();
+  State<MonacoJsonViewer> createState() => _MonacoJsonViewerState();
 }
 
-class _MonacoJsonViewerMobileState extends State<MonacoJsonViewerMobile> {
+class _MonacoJsonViewerState extends State<MonacoJsonViewer> {
   MonacoController? _controller;
 
   @override

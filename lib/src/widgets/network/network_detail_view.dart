@@ -4,13 +4,14 @@ import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:digia_inspector/src/utils/extensions.dart';
 import 'package:digia_inspector/src/utils/network_utils.dart';
 import 'package:digia_inspector/src/widgets/common/json_view.dart';
-import 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_web.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
       
-import 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_mobile.dart'
-    if (dart.library.js) 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_web.dart';
+import 'package:digia_inspector/src/widgets/json_viewer/monaco_json_view_stub.dart'
+  if (dart.library.js) 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_web.dart'
+  if (dart.library.io) 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_mobile.dart';
+
 
 /// Widget for displaying detailed network request information
 class NetworkDetailView extends StatefulWidget {
@@ -507,10 +508,10 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
       ),
       const SizedBox(height: AppSpacing.xs),
       if (kIsWeb)
-        MonacoJsonViewerWeb(content: pretty)
+        MonacoJsonViewer(content: pretty)
       else
         SizedBox(
-          child: MonacoJsonViewerMobile(content: pretty),
+          child: MonacoJsonViewer(content: pretty),
         ),
     ],
   );
