@@ -6,6 +6,7 @@ import 'dart:js_interop';
 import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:digia_inspector/src/utils/extensions.dart';
 import 'package:digia_inspector/src/widgets/common/json_view.dart';
+import 'package:digia_inspector/src/widgets/json_viewer/json_view_html.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:web/web.dart' as web;
@@ -51,7 +52,8 @@ class _MonacoJsonViewerWebState extends State<MonacoJsonViewerWeb> {
       ..style.width = '100%'
       ..style.height = '100%'
       ..setAttribute('data-instance-id', _instanceId)
-      ..src = 'json_viewer.html';
+      ..srcdoc = inlineHtml().toJS;
+
 
     iframe.onLoad.listen((_) {
       _postToIframe({
