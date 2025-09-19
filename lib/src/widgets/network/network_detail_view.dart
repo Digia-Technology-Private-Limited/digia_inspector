@@ -5,6 +5,13 @@ import 'package:digia_inspector/src/utils/extensions.dart';
 import 'package:digia_inspector/src/utils/network_utils.dart';
 import 'package:digia_inspector/src/widgets/common/json_view.dart';
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+      
+import 'package:digia_inspector/src/widgets/json_viewer/monaco_json_view_stub.dart'
+  if (dart.library.js) 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_web.dart'
+  if (dart.library.io) 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_mobile.dart';
+
 
 /// Widget for displaying detailed network request information
 class NetworkDetailView extends StatefulWidget {
@@ -471,103 +478,45 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
   }
 
   Widget _buildContentSection({
-    required String title,
-    required dynamic content,
-  }) {
-    // Attempt to parse JSON-like strings for better structured display
-    dynamic value = content;
-    if (content is String) {
-      try {
-        value = NetworkLogUtils.tryDecodeJson(content) ?? content;
-      } on Exception catch (_) {
-        value = content;
-      }
+  required String title,
+  required dynamic content,
+}) {
+  dynamic value = content;
+  if (content is String) {
+    try {
+      value = NetworkLogUtils.tryDecodeJson(content) ?? content;
+    } catch (_) {
+      value = content;
     }
-
-    // If primitive or string that isn't JSON, keep previous style but with copy
-    final isComplex = value is Map || value is List;
-    if (!isComplex) {
-      final textValue = value.toString();
-      return Container(
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: AppColors.separator,
-          ),
-          borderRadius: AppBorderRadius.radiusMD,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: AppSpacing.paddingSM,
-              decoration: const BoxDecoration(
-                color: AppColors.backgroundPrimary,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(AppBorderRadius.md),
-                  topRight: Radius.circular(AppBorderRadius.md),
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.code,
-                    size: AppIconSizes.sm,
-                    color: AppColors.contentSecondary,
-                  ),
-                  const SizedBox(width: AppSpacing.xs),
-                  Text(
-                    title,
-                    style: InspectorTypography.footnoteBold.copyWith(
-                      color: AppColors.contentPrimary,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => ClipboardUtils.copyToClipboardWithToast(
-                      context,
-                      textValue,
-                    ),
-                    icon: const Icon(
-                      Icons.copy,
-                      size: AppIconSizes.sm,
-                      color: AppColors.contentSecondary,
-                    ),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              width: double.infinity,
-              padding: AppSpacing.paddingSM,
-              child: SelectableText(
-                textValue,
-                style: InspectorTypography.monospace.copyWith(
-                  color: AppColors.contentPrimary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Structured JSON content via JsonView
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: InspectorTypography.subheadBold.copyWith(
-            color: AppColors.contentPrimary,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        JsonView(value: value),
-      ],
-    );
   }
+
+  String pretty;
+  try {
+    pretty = const JsonEncoder.withIndent('  ').convert(value);
+  } on Exception catch (_) {
+    pretty = value.toString();
+  }
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        title,
+        style: InspectorTypography.subheadBold.copyWith(
+          color: AppColors.contentPrimary,
+        ),
+      ),
+      const SizedBox(height: AppSpacing.xs),
+      if (kIsWeb)
+        MonacoJsonViewer(content: pretty)
+      else
+        SizedBox(
+          child: MonacoJsonViewer(content: pretty),
+        ),
+    ],
+  );
+}
+
 
   Widget _buildErrorSection(NetworkLogUIEntry log) {
     return Container(

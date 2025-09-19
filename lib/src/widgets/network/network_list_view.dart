@@ -162,15 +162,33 @@ class _NetworkListViewState extends State<NetworkListView> {
     );
   }
 
-  void _showNetworkDetail(NetworkLogUIEntry log) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => NetworkDetailView(
-        networkLogManager: widget.networkLogManager,
-        logId: log.id,
-      ),
-    );
-  }
+ void _showNetworkDetail(NetworkLogUIEntry log) {
+  showDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    builder: (context) {
+      return Align(
+        alignment: Alignment.bottomCenter,
+        child: FractionallySizedBox(
+          heightFactor: 0.9,
+          child: ClipRRect(
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(16),
+            ),
+            child: Material(
+              color: AppColors.surfaceElevated,
+              child: NetworkDetailView(
+                networkLogManager: widget.networkLogManager,
+                logId: log.id,
+                isWebView: true,
+                onClose: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
 }
