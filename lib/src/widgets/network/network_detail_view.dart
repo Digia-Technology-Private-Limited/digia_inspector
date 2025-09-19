@@ -4,9 +4,11 @@ import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:digia_inspector/src/utils/extensions.dart';
 import 'package:digia_inspector/src/utils/network_utils.dart';
 import 'package:digia_inspector/src/widgets/common/json_view.dart';
+import 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_web.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+      
 import 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_mobile.dart'
     if (dart.library.js) 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_web.dart';
 
@@ -505,10 +507,10 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
       ),
       const SizedBox(height: AppSpacing.xs),
       if (kIsWeb)
-        MonacoJsonViewer(content: pretty)
+        MonacoJsonViewerWeb(content: pretty)
       else
         SizedBox(
-          child: MonacoJsonViewer(content: pretty),
+          child: MonacoJsonViewerMobile(content: pretty),
         ),
     ],
   );
