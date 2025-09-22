@@ -44,12 +44,6 @@ class NetworkObserverImpl extends Interceptor implements NetworkObserver {
       } else {
         bodyString = body.toString();
       }
-
-      // Limit body size for display (max 10KB)
-      if (bodyString.length > 10240) {
-        return '${bodyString.substring(0, 10240)}... [truncated]';
-      }
-
       // Try to parse as JSON to pretty-print
       try {
         final jsonBody = jsonDecode(bodyString);
