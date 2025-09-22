@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Stub fallback when neither web nor mobile implementation is available.
-/// Useful for tests or unsupported platforms.
 class MonacoJsonViewer extends StatelessWidget {
   final String content;
   final double? height;
