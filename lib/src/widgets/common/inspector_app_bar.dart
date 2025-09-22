@@ -69,7 +69,7 @@ class InspectorAppBar extends StatelessWidget {
             IconButton(
               onPressed: () => onClearLogs!(currentTabIndex),
               icon: const Icon(
-                Icons.clear_all,
+                Icons.delete_outline,
                 color: AppColors.contentPrimary,
               ),
             )

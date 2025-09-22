@@ -3,15 +3,16 @@ import 'package:digia_inspector/src/models/network_log_ui_entry.dart';
 import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:digia_inspector/src/utils/extensions.dart';
 import 'package:digia_inspector/src/utils/network_utils.dart';
+import 'package:digia_inspector/src/widgets/common/inspector_toast.dart';
 import 'package:digia_inspector/src/widgets/common/json_view.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-      
-import 'package:digia_inspector/src/widgets/json_viewer/monaco_json_view_stub.dart'
-  if (dart.library.js) 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_web.dart'
-  if (dart.library.io) 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_mobile.dart';
 
+import 'package:digia_inspector/src/widgets/json_viewer/monaco_json_view_stub.dart'
+    if (dart.library.js) 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_web.dart'
+    if (dart.library.io) 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_mobile.dart';
+import 'package:flutter/services.dart';
 
 /// Widget for displaying detailed network request information
 class NetworkDetailView extends StatefulWidget {
@@ -167,6 +168,10 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
   Widget _buildHeader(NetworkLogUIEntry log) {
     final displayName = NetworkLogUtils.getDisplayName(log);
 
+    final statusText = log.statusCode != null
+        ? NetworkLogUtils.getStatusWithDescription(log.statusCode)
+        : (log.isPending ? 'Loading...' : '');
+
     return Container(
       padding: AppSpacing.paddingMD,
       decoration: const BoxDecoration(
@@ -204,13 +209,37 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '${log.method}: $displayName',
-                      style: InspectorTypography.headline.copyWith(
-                        fontSize: 16,
-                        color: AppColors.contentPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          '${log.method}: $displayName',
+                          style: InspectorTypography.headline.copyWith(
+                            fontSize: 16,
+                            color: AppColors.contentPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.copy,
+                              size: 18, color: AppColors.contentSecondary),
+                          tooltip: 'Copy as cURL',
+                          onPressed: () async {
+                            final curl = NetworkLogUtils.toCurl(log);
+                            if (curl.isEmpty) {
+                              showInspectorToast(context, 'Nothing to copy!');
+                              return;
+                            }
+                            try {
+                              await Clipboard.setData(
+                                  ClipboardData(text: curl));
+                              showInspectorToast(
+                                  context, 'Copied to clipboard!');
+                            } catch (e) {
+                              showInspectorToast(context, 'Copy failed:');
+                            }
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -478,45 +507,44 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
   }
 
   Widget _buildContentSection({
-  required String title,
-  required dynamic content,
-}) {
-  dynamic value = content;
-  if (content is String) {
-    try {
-      value = NetworkLogUtils.tryDecodeJson(content) ?? content;
-    } catch (_) {
-      value = content;
+    required String title,
+    required dynamic content,
+  }) {
+    dynamic value = content;
+    if (content is String) {
+      try {
+        value = NetworkLogUtils.tryDecodeJson(content) ?? content;
+      } catch (_) {
+        value = content;
+      }
     }
-  }
 
-  String pretty;
-  try {
-    pretty = const JsonEncoder.withIndent('  ').convert(value);
-  } on Exception catch (_) {
-    pretty = value.toString();
-  }
+    String pretty;
+    try {
+      pretty = const JsonEncoder.withIndent('  ').convert(value);
+    } on Exception catch (_) {
+      pretty = value.toString();
+    }
 
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        title,
-        style: InspectorTypography.subheadBold.copyWith(
-          color: AppColors.contentPrimary,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: InspectorTypography.subheadBold.copyWith(
+            color: AppColors.contentPrimary,
+          ),
         ),
-      ),
-      const SizedBox(height: AppSpacing.xs),
-      if (kIsWeb)
-        MonacoJsonViewer(content: pretty)
-      else
-        SizedBox(
-          child: MonacoJsonViewer(content: pretty),
-        ),
-    ],
-  );
-}
-
+        const SizedBox(height: AppSpacing.xs),
+        if (kIsWeb)
+          MonacoJsonViewer(content: pretty)
+        else
+          SizedBox(
+            child: MonacoJsonViewer(content: pretty),
+          ),
+      ],
+    );
+  }
 
   Widget _buildErrorSection(NetworkLogUIEntry log) {
     return Container(

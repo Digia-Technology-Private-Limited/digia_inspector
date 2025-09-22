@@ -2,7 +2,9 @@ import 'package:digia_inspector/src/models/network_log_ui_entry.dart';
 import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:digia_inspector/src/utils/extensions.dart';
 import 'package:digia_inspector/src/utils/network_utils.dart';
+import 'package:digia_inspector/src/widgets/common/inspector_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Individual network list item widget
 class NetworkListItem extends StatelessWidget {
@@ -39,7 +41,7 @@ class NetworkListItem extends StatelessWidget {
             children: [
               _buildHeader(),
               const SizedBox(height: AppSpacing.sm),
-              _buildMetadata(),
+              _buildMetadata(context),
             ],
           ),
         ),
@@ -98,7 +100,7 @@ class NetworkListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildMetadata() {
+  Widget _buildMetadata(BuildContext context) {
     return Row(
       children: [
         _buildTimestamp(),
@@ -109,6 +111,24 @@ class NetworkListItem extends StatelessWidget {
         ],
         _buildSize(),
         const Spacer(),
+        IconButton(
+          icon: const Icon(Icons.copy,
+              size: 18, color: AppColors.contentSecondary),
+          tooltip: 'Copy as cURL',
+          onPressed: () async {
+            final curl = NetworkLogUtils.toCurl(log);
+            if (curl.isEmpty) {
+              showInspectorToast(context, 'Nothing to copy!');
+              return;
+            }
+            try {
+              await Clipboard.setData(ClipboardData(text: curl));
+              showInspectorToast(context, 'Copied to clipboard!');
+            }catch (e) {
+              showInspectorToast(context, 'Copy failed:');
+            }
+          },
+        ),
         _buildStatusChip(),
       ],
     );
