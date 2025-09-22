@@ -2,7 +2,6 @@ import 'package:digia_inspector/src/models/network_log_ui_entry.dart';
 import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:digia_inspector/src/utils/extensions.dart';
 import 'package:digia_inspector/src/utils/network_utils.dart';
-import 'package:digia_inspector/src/widgets/common/inspector_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -117,16 +116,7 @@ class NetworkListItem extends StatelessWidget {
           tooltip: 'Copy as cURL',
           onPressed: () async {
             final curl = NetworkLogUtils.toCurl(log);
-            if (curl.isEmpty) {
-              showInspectorToast(context, 'Nothing to copy!');
-              return;
-            }
-            try {
-              await Clipboard.setData(ClipboardData(text: curl));
-              showInspectorToast(context, 'Copied to clipboard!');
-            }catch (e) {
-              showInspectorToast(context, 'Copy failed:');
-            }
+            await ClipboardUtils.copyToClipboardWithToast(context, curl);
           },
         ),
         _buildStatusChip(),
