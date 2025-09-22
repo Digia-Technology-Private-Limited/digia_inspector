@@ -8,6 +8,23 @@ import 'package:flutter/material.dart';
 
 /// Utilities for working with network logs and HTTP data
 class NetworkLogUtils {
+
+  ///cURL generator pass log HERE
+  static String toCurl(NetworkLogUIEntry entry) {
+    final method = entry.method;
+    final url = entry.url.toString();
+    final headers = entry.requestHeaders;
+    final body = entry.requestBody;
+    final buffer = StringBuffer('curl -X $method');
+    buffer.write(' "$url"');
+    headers.forEach((key, value) {
+      buffer.write(' -H "$key: $value"');
+    });
+    if (body != null && body.toString().isNotEmpty) {
+      buffer.write(" -d '$body'");
+    }
+    return buffer.toString();
+  }
   /// Gets the appropriate color for an HTTP method
   static Color getMethodColor(String method) {
     switch (method.toUpperCase()) {
