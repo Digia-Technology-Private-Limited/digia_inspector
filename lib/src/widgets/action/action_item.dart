@@ -6,6 +6,7 @@ import 'package:digia_inspector/src/utils/action_utils.dart';
 import 'package:digia_inspector/src/utils/extensions.dart';
 import 'package:digia_inspector_core/digia_inspector_core.dart';
 import 'package:flutter/material.dart';
+import 'package:digia_inspector/src/widgets/common/json_view.dart';
 
 /// Widget for displaying individual action items with full details
 class ActionItem extends StatefulWidget {
@@ -395,40 +396,10 @@ class _ActionItemState extends State<ActionItem> {
   }
 
   Widget _buildJsonView(Map<String, dynamic> data) {
-    final jsonString = _formatJson(data);
-
-    return GestureDetector(
-      onTap: () => ClipboardUtils.copyToClipboardWithToast(
-        context,
-        jsonString,
-      ),
-      child: Text(
-        jsonString,
-        style: InspectorTypography.monospace.copyWith(
-          color: AppColors.contentPrimary,
-          fontSize: 11,
-        ),
-      ),
+    return JsonView(
+      value: data,
+      inline: true,
     );
   }
-
-  String _formatJson(Map<String, dynamic> data) {
-    if (data.isEmpty) return '{}';
-
-    final entries = data.entries.map((entry) {
-      final value = _formatValue(entry.value);
-      return '  "${entry.key}": $value';
-    }).join(',\n');
-
-    return '{\n$entries\n}';
-  }
-
-  String _formatValue(dynamic value) {
-    if (value == null) return 'null';
-    if (value is String) return '"$value"';
-    if (value is num || value is bool) return value.toString();
-    if (value is List) return '[${value.length} items]';
-    if (value is Map) return '{${value.length} keys}';
-    return '"$value"';
-  }
+  
 }
