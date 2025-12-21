@@ -82,20 +82,30 @@ class _StateLogListViewState extends State<StateLogListView> {
     if (allLogs.isEmpty) {
       return Column(
         children: [
-          const Expanded(
+          Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.layers_outlined, size: 48, color: Colors.grey),
-                SizedBox(height: 16),
+                Icon(
+                  Icons.layers_outlined,
+                  size: 48,
+                  color: context.inspectorColors.contentTertiary,
+                ),
+                const SizedBox(height: 16),
                 Text(
                   'No state logs available',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: context.inspectorColors.contentSecondary,
+                  ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(
                   'Navigate through your app to see state changes',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: context.inspectorColors.contentTertiary,
+                  ),
                 ),
               ],
             ),
@@ -183,17 +193,19 @@ class _StateLogListViewState extends State<StateLogListView> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.surfaceBorder),
+        color: context.inspectorColors.backgroundSecondary,
+        borderRadius: AppBorderRadius.radiusLG,
+        border: Border.all(color: context.inspectorColors.borderDefault),
         boxShadow: AppElevation.cardShadow,
       ),
       child: Column(
         children: [
           StateSectionHeader(
-            title: const Text(
+            title: Text(
               'Global State',
-              style: InspectorTypography.headline,
+              style: context.inspectorTypography.headline.copyWith(
+                color: context.inspectorColors.contentPrimary,
+              ),
             ),
             icon: Icons.public,
             variableCount: variableCount,
@@ -206,7 +218,7 @@ class _StateLogListViewState extends State<StateLogListView> {
             lastUpdated: latest,
           ),
           if (isExpanded) ...[
-            const Divider(height: 1),
+            Divider(height: 1, color: context.inspectorColors.separator),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
               child: Column(
@@ -258,15 +270,20 @@ class _StateLogListViewState extends State<StateLogListView> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSecondary,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.surfaceBorder),
+        color: context.inspectorColors.backgroundSecondary,
+        borderRadius: AppBorderRadius.radiusLG,
+        border: Border.all(color: context.inspectorColors.borderDefault),
         boxShadow: AppElevation.cardShadow,
       ),
       child: Column(
         children: [
           StateSectionHeader(
-            title: Text(namespace, style: InspectorTypography.headline),
+            title: Text(
+              namespace,
+              style: context.inspectorTypography.headline.copyWith(
+                color: context.inspectorColors.contentPrimary,
+              ),
+            ),
             icon: Icons.web,
             variableCount: totalCount,
             isExpanded: isExpanded,
@@ -275,7 +292,7 @@ class _StateLogListViewState extends State<StateLogListView> {
             lastUpdated: stateData.lastUpdated,
           ),
           if (isExpanded) ...[
-            const Divider(height: 1),
+            Divider(height: 1, color: context.inspectorColors.separator),
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 4, 0, 8),
               child: Column(
@@ -284,9 +301,11 @@ class _StateLogListViewState extends State<StateLogListView> {
                     Column(
                       children: [
                         StateSectionHeader(
-                          title: const Text(
+                          title: Text(
                             'Parameters',
-                            style: InspectorTypography.subhead,
+                            style: context.inspectorTypography.subhead.copyWith(
+                              color: context.inspectorColors.contentPrimary,
+                            ),
                           ),
                           icon: Icons.tune,
                           variableCount: argsCount,
@@ -325,9 +344,11 @@ class _StateLogListViewState extends State<StateLogListView> {
                     Column(
                       children: [
                         StateSectionHeader(
-                          title: const Text(
+                          title: Text(
                             'States',
-                            style: InspectorTypography.subhead,
+                            style: context.inspectorTypography.subhead.copyWith(
+                              color: context.inspectorColors.contentPrimary,
+                            ),
                           ),
                           icon: Icons.data_object,
                           variableCount: stateCount,
@@ -385,15 +406,20 @@ class _StateLogListViewState extends State<StateLogListView> {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppColors.backgroundSecondary,
+        color: context.inspectorColors.backgroundSecondary,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.surfaceBorder),
+        border: Border.all(color: context.inspectorColors.borderDefault),
         boxShadow: AppElevation.cardShadow,
       ),
       child: Column(
         children: [
           StateSectionHeader(
-            title: Text(namespace, style: InspectorTypography.headline),
+            title: Text(
+              namespace,
+              style: context.inspectorTypography.headline.copyWith(
+                color: context.inspectorColors.contentPrimary,
+              ),
+            ),
             icon: Icons.inventory_2,
             variableCount: stateCount,
             isExpanded: isExpanded,
@@ -402,7 +428,7 @@ class _StateLogListViewState extends State<StateLogListView> {
             lastUpdated: stateData.lastUpdated,
           ),
           if (isExpanded) ...[
-            const Divider(height: 1),
+            Divider(height: 1, color: context.inspectorColors.separator),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
               child: Column(
@@ -446,11 +472,11 @@ class _StateLogListViewState extends State<StateLogListView> {
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundPrimary,
+      decoration: BoxDecoration(
+        color: context.inspectorColors.backgroundPrimary,
         border: Border(
           top: BorderSide(
-            color: AppColors.borderDefault,
+            color: context.inspectorColors.borderDefault,
           ),
         ),
       ),
@@ -458,8 +484,8 @@ class _StateLogListViewState extends State<StateLogListView> {
         totalNamespaces == 1
             ? '1 entity • $totalVariables variables'
             : '$totalNamespaces entities • $totalVariables variables',
-        style: InspectorTypography.footnote.copyWith(
-          color: AppColors.contentPrimary,
+        style: context.inspectorTypography.footnote.copyWith(
+          color: context.inspectorColors.contentPrimary,
         ),
         textAlign: TextAlign.center,
       ),

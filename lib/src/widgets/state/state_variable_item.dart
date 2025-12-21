@@ -32,8 +32,8 @@ class StateVariableItem extends StatelessWidget {
     return Container(
       padding: AppSpacing.paddingSM,
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundPrimary,
+      decoration: BoxDecoration(
+        color: context.inspectorColors.backgroundPrimary,
         borderRadius: AppBorderRadius.radiusMD,
       ),
       child: Row(
@@ -47,16 +47,17 @@ class StateVariableItem extends StatelessWidget {
                   children: [
                     Text(
                       variableKey,
-                      style: InspectorTypography.calloutBold.copyWith(
+                      style: context.inspectorTypography.calloutBold.copyWith(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
+                        color: context.inspectorColors.contentPrimary,
                       ),
                     ),
                     const SizedBox(width: AppSpacing.sm),
                     Text(
                       timeString,
-                      style: InspectorTypography.caption1.copyWith(
-                        color: AppColors.contentSecondary,
+                      style: context.inspectorTypography.caption1.copyWith(
+                        color: context.inspectorColors.contentSecondary,
                       ),
                     ),
                   ],
@@ -71,8 +72,9 @@ class StateVariableItem extends StatelessWidget {
                 else
                   Text(
                     formattedValue,
-                    style: InspectorTypography.title3.copyWith(
+                    style: context.inspectorTypography.title3.copyWith(
                       fontSize: 12,
+                      color: context.inspectorColors.contentPrimary,
                     ),
                   ),
               ],
@@ -85,10 +87,10 @@ class StateVariableItem extends StatelessWidget {
               value.toString(),
               customMessage: 'Value copied',
             ),
-            child: const Icon(
+            child: Icon(
               Icons.copy,
               size: 14,
-              color: AppColors.contentSecondary,
+              color: context.inspectorColors.contentSecondary,
             ),
           ),
           const SizedBox(width: AppSpacing.sm),
@@ -97,14 +99,14 @@ class StateVariableItem extends StatelessWidget {
               horizontal: AppSpacing.sm,
               vertical: AppSpacing.xs,
             ),
-            decoration: const BoxDecoration(
-              color: AppColors.backgroundSecondary,
+            decoration: BoxDecoration(
+              color: context.inspectorColors.backgroundSecondary,
               borderRadius: AppBorderRadius.radiusSM,
             ),
             child: Text(
               type,
-              style: InspectorTypography.caption1.copyWith(
-                color: AppColors.contentSecondary,
+              style: context.inspectorTypography.caption1.copyWith(
+                color: context.inspectorColors.contentSecondary,
               ),
             ),
           ),

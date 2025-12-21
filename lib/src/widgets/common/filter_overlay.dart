@@ -1,7 +1,5 @@
 import 'package:digia_inspector/src/log_managers/network_log_manager.dart';
-import 'package:digia_inspector/src/theme/app_colors.dart';
-import 'package:digia_inspector/src/theme/app_dimensions.dart';
-import 'package:digia_inspector/src/theme/app_typography.dart';
+import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:flutter/material.dart';
 
 /// Custom overlay for filter dropdown instead of bottom sheet
@@ -121,15 +119,15 @@ class _FilterOverlayState extends State<FilterOverlay>
   Widget _buildFilterDropdown() {
     return Material(
       elevation: 8,
+      color: context.inspectorColors.backgroundPrimary,
       borderRadius: AppBorderRadius.radiusLG,
-      shadowColor: AppColors.shadow,
+      shadowColor: context.inspectorColors.shadow,
       child: Container(
         width: 200,
         decoration: BoxDecoration(
-          color: AppColors.surfaceElevated,
           borderRadius: AppBorderRadius.radiusLG,
           border: Border.all(
-            color: AppColors.separator,
+            color: context.inspectorColors.separator,
             width: 0.5,
           ),
         ),
@@ -147,26 +145,26 @@ class _FilterOverlayState extends State<FilterOverlay>
   Widget _buildHeader() {
     return Container(
       padding: AppSpacing.paddingSM,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: AppColors.separator,
+            color: context.inspectorColors.separator,
             width: 0.5,
           ),
         ),
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.filter_list,
             size: AppIconSizes.sm,
-            color: AppColors.contentPrimary,
+            color: context.inspectorColors.contentPrimary,
           ),
           const SizedBox(width: AppSpacing.xs),
           Text(
             'Filter',
-            style: InspectorTypography.subheadBold.copyWith(
-              color: AppColors.contentPrimary,
+            style: context.inspectorTypography.subheadBold.copyWith(
+              color: context.inspectorColors.contentPrimary,
             ),
           ),
           const Spacer(),
@@ -180,8 +178,8 @@ class _FilterOverlayState extends State<FilterOverlay>
               },
               child: Text(
                 'Clear',
-                style: InspectorTypography.caption1.copyWith(
-                  color: AppColors.accent,
+                style: context.inspectorTypography.caption1.copyWith(
+                  color: context.inspectorColors.accent,
                 ),
               ),
             ),
@@ -218,7 +216,7 @@ class _FilterOverlayState extends State<FilterOverlay>
         ),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.accent.withValues(alpha: 0.1)
+              ? context.inspectorColors.accent.withValues(alpha: 0.1)
               : Colors.transparent,
           borderRadius: AppBorderRadius.radiusSM,
         ),
@@ -228,10 +226,11 @@ class _FilterOverlayState extends State<FilterOverlay>
               width: 16,
               height: 16,
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.accent : null,
+                color: isSelected ? context.inspectorColors.accent : null,
                 border: Border.all(
-                  color:
-                      isSelected ? AppColors.accent : AppColors.contentTertiary,
+                  color: isSelected
+                      ? context.inspectorColors.accent
+                      : context.inspectorColors.contentTertiary,
                   width: 1.5,
                 ),
                 borderRadius: AppBorderRadius.radiusMD,
@@ -240,7 +239,7 @@ class _FilterOverlayState extends State<FilterOverlay>
                   ? const Center(
                       child: Icon(
                         Icons.check,
-                        color: AppColors.backgroundSecondary,
+                        color: Colors.white,
                         size: AppIconSizes.xs,
                       ),
                     )
@@ -250,9 +249,10 @@ class _FilterOverlayState extends State<FilterOverlay>
             Expanded(
               child: Text(
                 _getFilterTitle(filter),
-                style: InspectorTypography.subhead.copyWith(
-                  color:
-                      isSelected ? AppColors.accent : AppColors.contentPrimary,
+                style: context.inspectorTypography.subhead.copyWith(
+                  color: isSelected
+                      ? context.inspectorColors.accent
+                      : context.inspectorColors.contentPrimary,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 ),
               ),
@@ -302,12 +302,17 @@ class FilterOverlayManager {
   }) {
     hide(); // Hide any existing overlay
 
+    final theme = Theme.of(context);
+
     _overlayEntry = OverlayEntry(
-      builder: (context) => FilterOverlay(
-        currentFilter: currentFilter,
-        onFilterChanged: onFilterChanged,
-        buttonKey: buttonKey,
-        onClose: hide,
+      builder: (context) => Theme(
+        data: theme,
+        child: FilterOverlay(
+          currentFilter: currentFilter,
+          onFilterChanged: onFilterChanged,
+          buttonKey: buttonKey,
+          onClose: hide,
+        ),
       ),
     );
 

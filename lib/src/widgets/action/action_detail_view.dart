@@ -63,8 +63,8 @@ class _ActionDetailViewState extends State<ActionDetailView> {
   Widget _buildContent(ActionLog currentFlow) {
     if (widget.isWebView) {
       return Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceElevated,
+        decoration: BoxDecoration(
+          color: context.inspectorColors.surfaceElevated,
         ),
         child: Column(
           children: [
@@ -80,9 +80,9 @@ class _ActionDetailViewState extends State<ActionDetailView> {
 
     return Container(
       constraints: BoxConstraints(maxHeight: maxHeight),
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundPrimary,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: context.inspectorColors.backgroundPrimary,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(AppSpacing.lg),
           topRight: Radius.circular(AppSpacing.lg),
         ),
@@ -104,7 +104,7 @@ class _ActionDetailViewState extends State<ActionDetailView> {
       width: 36,
       height: 4,
       decoration: BoxDecoration(
-        color: AppColors.contentTertiary,
+        color: context.inspectorColors.contentTertiary,
         borderRadius: BorderRadius.circular(2),
       ),
     );
@@ -113,11 +113,11 @@ class _ActionDetailViewState extends State<ActionDetailView> {
   Widget _buildHeader(ActionLog currentFlow) {
     return Container(
       padding: AppSpacing.paddingMD,
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundSecondary,
+      decoration: BoxDecoration(
+        color: context.inspectorColors.backgroundSecondary,
         border: Border(
           bottom: BorderSide(
-            color: AppColors.borderDefault,
+            color: context.inspectorColors.borderDefault,
             width: 0.5,
           ),
         ),
@@ -126,7 +126,10 @@ class _ActionDetailViewState extends State<ActionDetailView> {
         children: [
           Icon(
             ActionLogUtils.getStatusIcon(currentFlow.status.name),
-            color: ActionLogUtils.getStatusColor(currentFlow.status.name),
+            color: ActionLogUtils.getStatusColor(
+              currentFlow.status.name,
+              context.inspectorColors,
+            ),
             size: AppIconSizes.lg,
           ),
           const SizedBox(width: AppSpacing.sm),
@@ -136,8 +139,8 @@ class _ActionDetailViewState extends State<ActionDetailView> {
               children: [
                 Text(
                   currentFlow.actionType,
-                  style: InspectorTypography.headline.copyWith(
-                    color: AppColors.contentPrimary,
+                  style: context.inspectorTypography.headline.copyWith(
+                    color: context.inspectorColors.contentPrimary,
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                   ),
@@ -147,8 +150,8 @@ class _ActionDetailViewState extends State<ActionDetailView> {
                 if (currentFlow.sourceChain?.isNotEmpty ?? false)
                   Text(
                     currentFlow.formattedSourceChain,
-                    style: InspectorTypography.subhead.copyWith(
-                      color: AppColors.contentSecondary,
+                    style: context.inspectorTypography.subhead.copyWith(
+                      color: context.inspectorColors.contentSecondary,
                       fontSize: 14,
                     ),
                     maxLines: 1,
@@ -165,9 +168,9 @@ class _ActionDetailViewState extends State<ActionDetailView> {
                 Navigator.of(context).pop();
               }
             },
-            icon: const Icon(
+            icon: Icon(
               Icons.close,
-              color: AppColors.contentSecondary,
+              color: context.inspectorColors.contentSecondary,
             ),
           ),
         ],
@@ -193,10 +196,10 @@ class _ActionDetailViewState extends State<ActionDetailView> {
     return Container(
       padding: AppSpacing.paddingMD,
       decoration: BoxDecoration(
-        color: AppColors.backgroundSecondary,
+        color: context.inspectorColors.backgroundSecondary,
         borderRadius: AppBorderRadius.radiusLG,
         border: Border.all(
-          color: AppColors.borderDefault,
+          color: context.inspectorColors.borderDefault,
         ),
       ),
       child: Column(
@@ -222,8 +225,8 @@ class _ActionDetailViewState extends State<ActionDetailView> {
             width: 80,
             child: Text(
               label,
-              style: InspectorTypography.subhead.copyWith(
-                color: AppColors.contentSecondary,
+              style: context.inspectorTypography.subhead.copyWith(
+                color: context.inspectorColors.contentSecondary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -231,8 +234,8 @@ class _ActionDetailViewState extends State<ActionDetailView> {
           Expanded(
             child: Text(
               value,
-              style: InspectorTypography.body.copyWith(
-                color: AppColors.contentPrimary,
+              style: context.inspectorTypography.body.copyWith(
+                color: context.inspectorColors.contentPrimary,
               ),
             ),
           ),
@@ -249,8 +252,8 @@ class _ActionDetailViewState extends State<ActionDetailView> {
         children: [
           Text(
             label,
-            style: InspectorTypography.subhead.copyWith(
-              color: AppColors.contentSecondary,
+            style: context.inspectorTypography.subhead.copyWith(
+              color: context.inspectorColors.contentSecondary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -260,17 +263,17 @@ class _ActionDetailViewState extends State<ActionDetailView> {
               padding: const EdgeInsets.only(left: AppSpacing.md),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.arrow_right,
                     size: AppIconSizes.sm,
-                    color: AppColors.contentTertiary,
+                    color: context.inspectorColors.contentTertiary,
                   ),
                   const SizedBox(width: AppSpacing.xs),
                   Expanded(
                     child: Text(
                       item,
-                      style: InspectorTypography.body.copyWith(
-                        color: AppColors.contentPrimary,
+                      style: context.inspectorTypography.body.copyWith(
+                        color: context.inspectorColors.contentPrimary,
                       ),
                     ),
                   ),
@@ -291,8 +294,8 @@ class _ActionDetailViewState extends State<ActionDetailView> {
       children: [
         Text(
           'Actions ($total)',
-          style: InspectorTypography.title3.copyWith(
-            color: AppColors.contentPrimary,
+          style: context.inspectorTypography.title3.copyWith(
+            color: context.inspectorColors.contentPrimary,
           ),
         ),
         const SizedBox(height: AppSpacing.md),

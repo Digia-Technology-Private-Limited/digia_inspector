@@ -1,18 +1,28 @@
 import 'package:flutter/material.dart';
 
+/// Stub fallback when neither web nor mobile implementation is available.
+/// Useful for tests or unsupported platforms.
 class MonacoJsonViewer extends StatelessWidget {
-  final String content;
-  final double? height;
-  final double? width;
-  final bool showCopyButton;
-
+  /// Constructor
   const MonacoJsonViewer({
-    super.key,
     required this.content,
+    super.key,
     this.height,
     this.width,
     this.showCopyButton = true,
   });
+
+  /// The JSON content to display
+  final String content;
+
+  /// The height of the widget
+  final double? height;
+
+  /// The width of the widget
+  final double? width;
+
+  /// Whether to show a copy button
+  final bool showCopyButton;
 
   @override
   Widget build(BuildContext context) {

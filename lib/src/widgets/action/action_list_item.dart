@@ -28,10 +28,10 @@ class ActionFlowListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.backgroundSecondary,
+        color: context.inspectorColors.backgroundSecondary,
         borderRadius: AppBorderRadius.radiusLG,
         border: Border.all(
-          color: AppColors.borderDefault,
+          color: context.inspectorColors.borderDefault,
         ),
       ),
       child: InkWell(
@@ -43,9 +43,9 @@ class ActionFlowListItem extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(),
+              _buildHeader(context),
               const SizedBox(height: AppSpacing.sm),
-              _buildMetadata(),
+              _buildMetadata(context),
             ],
           ),
         ),
@@ -53,44 +53,44 @@ class ActionFlowListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        _buildTriggerChip(),
+        _buildTriggerChip(context),
         const SizedBox(width: AppSpacing.sm),
-        Expanded(child: _buildActionText()),
-        _buildChevron(),
+        Expanded(child: _buildActionText(context)),
+        _buildChevron(context),
       ],
     );
   }
 
-  Widget _buildTriggerChip() {
+  Widget _buildTriggerChip(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.sm,
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: AppColors.accent.withValues(alpha: 0.1),
+        color: context.inspectorColors.surfacePressed,
         borderRadius: AppBorderRadius.radiusSM,
       ),
       child: Text(
         flow.triggerName ?? 'Unknown',
-        style: InspectorTypography.caption1Bold.copyWith(
-          color: AppColors.accent,
+        style: context.inspectorTypography.caption1Bold.copyWith(
+          color: context.inspectorColors.accent,
         ),
       ),
     );
   }
 
-  Widget _buildActionText() {
+  Widget _buildActionText(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           flow.actionType,
-          style: InspectorTypography.callout.copyWith(
-            color: AppColors.contentPrimary,
+          style: context.inspectorTypography.callout.copyWith(
+            color: context.inspectorColors.contentPrimary,
           ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
@@ -98,8 +98,8 @@ class ActionFlowListItem extends StatelessWidget {
         if (flow.sourceChain?.isNotEmpty ?? false)
           Text(
             'Entity: ${flow.sourceChain?.first ?? 'Unknown'}',
-            style: InspectorTypography.footnote.copyWith(
-              color: AppColors.contentTertiary,
+            style: context.inspectorTypography.footnote.copyWith(
+              color: context.inspectorColors.contentTertiary,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -108,58 +108,61 @@ class ActionFlowListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildChevron() {
-    return const Icon(
+  Widget _buildChevron(BuildContext context) {
+    return Icon(
       Icons.chevron_right,
       size: AppIconSizes.md,
-      color: AppColors.chevronColor,
+      color: context.inspectorColors.chevronColor,
     );
   }
 
-  Widget _buildMetadata() {
+  Widget _buildMetadata(BuildContext context) {
     return Row(
       children: [
-        _buildTimestamp(),
+        _buildTimestamp(context),
         const SizedBox(width: AppSpacing.md),
-        _buildActionCount(),
+        _buildActionCount(context),
         const Spacer(),
-        _buildStatusChip(),
+        _buildStatusChip(context),
       ],
     );
   }
 
-  Widget _buildTimestamp() {
+  Widget _buildTimestamp(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(
+        Icon(
           Icons.schedule,
           size: AppIconSizes.sm,
-          color: AppColors.contentTertiary,
+          color: context.inspectorColors.contentTertiary,
         ),
         const SizedBox(width: 2),
         Text(
           flow.timestamp.networkLogFormat,
-          style: InspectorTypography.footnote.copyWith(
-            color: AppColors.contentSecondary,
+          style: context.inspectorTypography.footnote.copyWith(
+            color: context.inspectorColors.contentSecondary,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildActionCount() {
+  Widget _buildActionCount(BuildContext context) {
     final totalActions = actionLogManager.countActionsInFlow(flow.id);
     return Text(
       '$totalActions actions',
-      style: InspectorTypography.footnote.copyWith(
-        color: AppColors.contentSecondary,
+      style: context.inspectorTypography.footnote.copyWith(
+        color: context.inspectorColors.contentSecondary,
       ),
     );
   }
 
-  Widget _buildStatusChip() {
-    final statusColor = ActionLogUtils.getStatusColor(flow.status.name);
+  Widget _buildStatusChip(BuildContext context) {
+    final statusColor = ActionLogUtils.getStatusColor(
+      flow.status.name,
+      context.inspectorColors,
+    );
     final statusText = ActionLogUtils.getStatusDisplayText(flow.status.name);
 
     return Container(
@@ -173,8 +176,8 @@ class ActionFlowListItem extends StatelessWidget {
       ),
       child: Text(
         statusText,
-        style: InspectorTypography.caption1Bold.copyWith(
-          color: AppColors.backgroundSecondary,
+        style: context.inspectorTypography.caption1Bold.copyWith(
+          color: context.inspectorColors.backgroundSecondary,
         ),
       ),
     );

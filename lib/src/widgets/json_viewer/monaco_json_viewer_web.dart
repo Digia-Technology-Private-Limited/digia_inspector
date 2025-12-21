@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ui' show Brightness;
-import 'dart:ui_web' as ui_web;
 import 'dart:js_interop';
+import 'dart:ui_web' as ui_web;
+
 import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:digia_inspector/src/utils/extensions.dart';
 import 'package:digia_inspector/src/widgets/common/json_view.dart';
@@ -11,19 +11,27 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:web/web.dart' as web;
 
-
+/// Widget for displaying JSON content in a Monaco editor on web devices
 class MonacoJsonViewer extends StatefulWidget {
+  /// Constructor
   const MonacoJsonViewer({
-    super.key,
     required this.content,
+    super.key,
     this.height,
     this.width,
     this.showCopyButton = true,
   });
 
+  /// The JSON content to display
   final String content;
+
+  /// The height of the widget
   final double? height;
+
+  /// The width of the widget
   final double? width;
+
+  /// Whether to show a copy button
   final bool showCopyButton;
 
   @override
@@ -53,7 +61,6 @@ class _MonacoJsonViewerState extends State<MonacoJsonViewer> {
       ..style.height = '100%'
       ..setAttribute('data-instance-id', _instanceId)
       ..srcdoc = inlineHtml().toJS;
-
 
     iframe.onLoad.listen((_) {
       _postToIframe({
@@ -97,7 +104,7 @@ class _MonacoJsonViewerState extends State<MonacoJsonViewer> {
             'instanceId': _instanceId,
           });
         }
-      } catch (_) {
+      } on Exception catch (_) {
         // ignore non-JSON messages
       }
     });
@@ -135,7 +142,7 @@ class _MonacoJsonViewerState extends State<MonacoJsonViewer> {
   @override
   Widget build(BuildContext context) {
     final box = BoxDecoration(
-      border: Border.all(color: AppColors.separator),
+      border: Border.all(color: context.inspectorColors.separator),
       borderRadius: AppBorderRadius.radiusMD,
     );
 
@@ -144,7 +151,7 @@ class _MonacoJsonViewerState extends State<MonacoJsonViewer> {
       dynamic parsed = widget.content;
       try {
         parsed = jsonDecode(widget.content);
-      } catch (_) {}
+      } on Exception catch (_) {}
       return Container(
         decoration: box,
         child: Padding(
@@ -165,25 +172,25 @@ class _MonacoJsonViewerState extends State<MonacoJsonViewer> {
         children: [
           Container(
             padding: AppSpacing.paddingSM,
-            decoration: const BoxDecoration(
-              color: AppColors.backgroundPrimary,
-              borderRadius: BorderRadius.only(
+            decoration: BoxDecoration(
+              color: context.inspectorColors.backgroundPrimary,
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(AppBorderRadius.md),
                 topRight: Radius.circular(AppBorderRadius.md),
               ),
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.data_object,
                   size: AppIconSizes.sm,
-                  color: AppColors.contentSecondary,
+                  color: context.inspectorColors.contentSecondary,
                 ),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
                   'JSON',
-                  style: InspectorTypography.footnoteBold.copyWith(
-                    color: AppColors.contentPrimary,
+                  style: context.inspectorTypography.footnoteBold.copyWith(
+                    color: context.inspectorColors.contentPrimary,
                   ),
                 ),
                 const Spacer(),
@@ -196,10 +203,10 @@ class _MonacoJsonViewerState extends State<MonacoJsonViewer> {
                         customMessage: 'JSON copied',
                       );
                     },
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.copy,
                       size: AppIconSizes.sm,
-                      color: AppColors.contentSecondary,
+                      color: context.inspectorColors.contentSecondary,
                     ),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),

@@ -1,4 +1,5 @@
 import 'package:digia_inspector/src/state/inspector_controller.dart';
+import 'package:digia_inspector/src/theme/app_colors.dart';
 import 'package:digia_inspector/src/utils/platform_utils.dart';
 import 'package:digia_inspector/src/widgets/inspector_mobile_console.dart';
 import 'package:digia_inspector/src/widgets/inspector_web_console.dart';
@@ -24,6 +25,7 @@ class InspectorConsole extends StatelessWidget {
     this.initialTab = 0,
     this.height = 400,
     this.width,
+    this.themeMode,
   });
 
   /// The inspector controller managing log data
@@ -39,24 +41,61 @@ class InspectorConsole extends StatelessWidget {
   final double height;
 
   /// Width of the console (web only)
+  /// Width of the console (web only)
   final double? width;
+
+  /// Theme mode for the inspector (Defaults to system)
+  final ThemeMode? themeMode;
 
   @override
   Widget build(BuildContext context) {
-    if (PlatformUtils.isWeb) {
-      return InspectorWebConsole(
-        controller: controller,
-        onClose: onClose,
-        initialTabIndex: initialTab,
-        height: height,
-        width: width,
-      );
-    } else {
-      return InspectorMobileConsole(
-        controller: controller,
-        onClose: onClose,
-        initialTabIndex: initialTab,
-      );
-    }
+    // Determine brightness
+    final effectiveThemeMode = themeMode ?? ThemeMode.system;
+    final platformBrightness = MediaQuery.platformBrightnessOf(context);
+    final brightness = effectiveThemeMode == ThemeMode.system
+        ? platformBrightness
+        : effectiveThemeMode == ThemeMode.light
+            ? Brightness.light
+            : Brightness.dark;
+
+    final colors = brightness == Brightness.dark
+        ? InspectorColorsExtension.dark
+        : InspectorColorsExtension.light;
+
+    // Create a theme data that includes our extension
+    final theme = ThemeData(
+      brightness: brightness,
+      extensions: [colors],
+      useMaterial3: true,
+      scaffoldBackgroundColor: colors.backgroundPrimary,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: colors.accent,
+        brightness: brightness,
+        surface: colors.backgroundPrimary,
+      ),
+    );
+
+    return Theme(
+      data: theme,
+      child: Builder(
+        builder: (context) {
+          if (PlatformUtils.isWeb) {
+            return InspectorWebConsole(
+              controller: controller,
+              onClose: onClose,
+              initialTabIndex: initialTab,
+              height: height,
+              width: width,
+            );
+          } else {
+            return InspectorMobileConsole(
+              controller: controller,
+              onClose: onClose,
+              initialTabIndex: initialTab,
+            );
+          }
+        },
+      ),
+    );
   }
 }

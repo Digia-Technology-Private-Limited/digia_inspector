@@ -1,3 +1,4 @@
+/// Inline HTML for the JSON viewer
 String inlineHtml() {
   return """
 <!DOCTYPE html>

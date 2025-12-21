@@ -25,15 +25,15 @@ class InspectorTabBar extends StatelessWidget {
         isScrollable: true,
         physics: const NeverScrollableScrollPhysics(),
         controller: tabController,
-        indicator: const BoxDecoration(
-          color: AppColors.backgroundTertiary,
+        indicator: BoxDecoration(
+          color: context.inspectorColors.backgroundTertiary,
           borderRadius: AppBorderRadius.radiusXXL,
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
-        labelColor: AppColors.contentPrimary,
-        unselectedLabelColor: AppColors.contentSecondary,
-        labelStyle: InspectorTypography.subheadBold,
+        labelColor: context.inspectorColors.contentPrimary,
+        unselectedLabelColor: context.inspectorColors.contentSecondary,
+        labelStyle: context.inspectorTypography.subheadBold,
         overlayColor: WidgetStateProperty.all(Colors.transparent),
         splashFactory: NoSplash.splashFactory,
         labelPadding: const EdgeInsets.symmetric(

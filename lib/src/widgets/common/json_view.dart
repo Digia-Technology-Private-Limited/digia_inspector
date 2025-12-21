@@ -64,7 +64,7 @@ class _JsonViewState extends State<JsonView> {
 
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.separator),
+        border: Border.all(color: context.inspectorColors.separator),
         borderRadius: AppBorderRadius.radiusMD,
       ),
       child: Column(
@@ -84,25 +84,25 @@ class _JsonViewState extends State<JsonView> {
   Widget _buildHeader(BuildContext context) {
     return Container(
       padding: AppSpacing.paddingSM,
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundPrimary,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: context.inspectorColors.backgroundPrimary,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(AppBorderRadius.md),
           topRight: Radius.circular(AppBorderRadius.md),
         ),
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.data_object,
             size: AppIconSizes.sm,
-            color: AppColors.contentSecondary,
+            color: context.inspectorColors.contentSecondary,
           ),
           const SizedBox(width: AppSpacing.xs),
           Text(
             'JSON',
-            style: InspectorTypography.footnoteBold.copyWith(
-              color: AppColors.contentPrimary,
+            style: context.inspectorTypography.footnoteBold.copyWith(
+              color: context.inspectorColors.contentPrimary,
             ),
           ),
           const Spacer(),
@@ -116,10 +116,10 @@ class _JsonViewState extends State<JsonView> {
                 );
                 widget.onCopied?.call();
               },
-              icon: const Icon(
+              icon: Icon(
                 Icons.copy,
                 size: AppIconSizes.sm,
-                color: AppColors.contentSecondary,
+                color: context.inspectorColors.contentSecondary,
               ),
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
@@ -134,10 +134,10 @@ class _JsonViewState extends State<JsonView> {
     if (value == null || value is num || value is bool) {
       return SelectableText(
         value == null ? 'null' : value.toString(),
-        style: InspectorTypography.monospace.copyWith(
+        style: context.inspectorTypography.monospace.copyWith(
           color: value == null
-              ? AppColors.contentTertiary
-              : AppColors.contentPrimary,
+              ? context.inspectorColors.contentTertiary
+              : context.inspectorColors.contentPrimary,
         ),
       );
     }
@@ -162,8 +162,8 @@ class _JsonViewState extends State<JsonView> {
     // Fallback
     return SelectableText(
       value.toString(),
-      style: InspectorTypography.monospace.copyWith(
-        color: AppColors.contentPrimary,
+      style: context.inspectorTypography.monospace.copyWith(
+        color: context.inspectorColors.contentPrimary,
       ),
     );
   }
@@ -177,8 +177,8 @@ class _JsonViewState extends State<JsonView> {
     if (length == 0) {
       return SelectableText(
         '{}',
-        style: InspectorTypography.monospace.copyWith(
-          color: AppColors.contentSecondary,
+        style: context.inspectorTypography.monospace.copyWith(
+          color: context.inspectorColors.contentSecondary,
         ),
       );
     }
@@ -205,8 +205,8 @@ class _JsonViewState extends State<JsonView> {
                     flex: 2,
                     child: Text(
                       key,
-                      style: InspectorTypography.monospace.copyWith(
-                        color: AppColors.contentSecondary,
+                      style: context.inspectorTypography.monospace.copyWith(
+                        color: context.inspectorColors.contentSecondary,
                       ),
                     ),
                   ),
@@ -229,8 +229,8 @@ class _JsonViewState extends State<JsonView> {
     if (length == 0) {
       return SelectableText(
         '[]',
-        style: InspectorTypography.monospace.copyWith(
-          color: AppColors.contentSecondary,
+        style: context.inspectorTypography.monospace.copyWith(
+          color: context.inspectorColors.contentSecondary,
         ),
       );
     }
@@ -254,8 +254,8 @@ class _JsonViewState extends State<JsonView> {
                 children: [
                   Text(
                     '[$i]',
-                    style: InspectorTypography.monospace.copyWith(
-                      color: AppColors.contentSecondary,
+                    style: context.inspectorTypography.monospace.copyWith(
+                      color: context.inspectorColors.contentSecondary,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.xs),
@@ -280,19 +280,19 @@ class _JsonViewState extends State<JsonView> {
         Icon(
           isExpanded ? Icons.expand_more : Icons.chevron_right,
           size: AppIconSizes.sm,
-          color: AppColors.contentSecondary,
+          color: context.inspectorColors.contentSecondary,
         ),
         Text(
           '$kind ($length)',
-          style: InspectorTypography.footnoteBold.copyWith(
-            color: AppColors.contentPrimary,
+          style: context.inspectorTypography.footnoteBold.copyWith(
+            color: context.inspectorColors.contentPrimary,
           ),
         ),
         const SizedBox(width: AppSpacing.xs),
         Text(
           isExpanded ? open : '$open…$close',
-          style: InspectorTypography.monospace.copyWith(
-            color: AppColors.contentTertiary,
+          style: context.inspectorTypography.monospace.copyWith(
+            color: context.inspectorColors.contentTertiary,
           ),
         ),
       ],
@@ -311,7 +311,7 @@ class _JsonViewState extends State<JsonView> {
 
   dynamic _normalize(dynamic value, Map<int, bool> seen) {
     final identity =
-        value is Map || value is List ? identityHashCode(value) : null;
+        value is Map || value is Iterable ? identityHashCode(value) : null;
     if (identity != null) {
       if (seen.containsKey(identity)) return '<circular>';
       seen[identity] = true;
@@ -323,7 +323,7 @@ class _JsonViewState extends State<JsonView> {
         map[k] = _normalize(value[k], seen);
       }
       return map;
-    } else if (value is List) {
+    } else if (value is Iterable) {
       return value.map((e) => _normalize(e, seen)).toList();
     }
     return value;
@@ -403,8 +403,8 @@ class _ExpandablePrimitiveState extends State<_ExpandablePrimitive> {
           : null,
       child: SelectableText(
         text,
-        style: InspectorTypography.monospace.copyWith(
-          color: AppColors.contentPrimary,
+        style: context.inspectorTypography.monospace.copyWith(
+          color: context.inspectorColors.contentPrimary,
         ),
       ),
     );

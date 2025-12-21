@@ -60,7 +60,7 @@ class _InspectorMobileConsoleState extends State<InspectorMobileConsole>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: context.inspectorColors.backgroundPrimary,
       body: SafeArea(
         child: Column(
           children: [

@@ -1,7 +1,5 @@
 import 'package:digia_inspector/src/log_managers/network_log_manager.dart';
-import 'package:digia_inspector/src/theme/app_colors.dart';
-import 'package:digia_inspector/src/theme/app_dimensions.dart';
-import 'package:digia_inspector/src/theme/app_typography.dart';
+import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:digia_inspector/src/widgets/common/filter_overlay.dart';
 import 'package:flutter/material.dart';
 
@@ -52,7 +50,7 @@ class _NetworkSearchBarState extends State<NetworkSearchBar> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      color: AppColors.backgroundSecondary,
+      color: context.inspectorColors.backgroundSecondary,
       child: Row(
         children: [
           Expanded(child: _buildSearchField()),
@@ -67,25 +65,25 @@ class _NetworkSearchBarState extends State<NetworkSearchBar> {
     return Container(
       height: 36,
       decoration: BoxDecoration(
-        color: AppColors.backgroundSecondary,
+        color: context.inspectorColors.backgroundSecondary,
         borderRadius: AppBorderRadius.radiusXL,
         border: Border.all(
-          color: AppColors.borderDefault,
+          color: context.inspectorColors.borderDefault,
         ),
       ),
       child: TextField(
         controller: _controller,
-        style: InspectorTypography.subhead.copyWith(
-          color: AppColors.contentPrimary,
+        style: context.inspectorTypography.subhead.copyWith(
+          color: context.inspectorColors.contentPrimary,
         ),
         decoration: InputDecoration(
           hintText: 'Search requests...',
-          hintStyle: InspectorTypography.subhead.copyWith(
-            color: AppColors.contentPlaceholder,
+          hintStyle: context.inspectorTypography.subhead.copyWith(
+            color: context.inspectorColors.contentPlaceholder,
           ),
-          prefixIcon: const Icon(
+          prefixIcon: Icon(
             Icons.search,
-            color: AppColors.contentTertiary,
+            color: context.inspectorColors.contentTertiary,
             size: AppIconSizes.md,
           ),
           border: const OutlineInputBorder(
@@ -111,11 +109,11 @@ class _NetworkSearchBarState extends State<NetworkSearchBar> {
       height: 36,
       decoration: BoxDecoration(
         color: hasActiveFilter
-            ? AppColors.accent.withValues(alpha: 0.1)
-            : AppColors.backgroundSecondary,
+            ? context.inspectorColors.accent.withValues(alpha: 0.1)
+            : context.inspectorColors.backgroundSecondary,
         borderRadius: AppBorderRadius.radiusMD,
         border: Border.all(
-          color: AppColors.borderDefault,
+          color: context.inspectorColors.borderDefault,
         ),
       ),
       child: Material(
@@ -130,8 +128,8 @@ class _NetworkSearchBarState extends State<NetworkSearchBar> {
                 child: Icon(
                   Icons.tune,
                   color: hasActiveFilter
-                      ? AppColors.accent
-                      : AppColors.contentTertiary,
+                      ? context.inspectorColors.accent
+                      : context.inspectorColors.contentTertiary,
                   size: AppIconSizes.md,
                 ),
               ),
@@ -142,8 +140,8 @@ class _NetworkSearchBarState extends State<NetworkSearchBar> {
                   child: Container(
                     width: 8,
                     height: 8,
-                    decoration: const BoxDecoration(
-                      color: AppColors.accent,
+                    decoration: BoxDecoration(
+                      color: context.inspectorColors.accent,
                       shape: BoxShape.circle,
                     ),
                   ),

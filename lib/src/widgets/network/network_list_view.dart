@@ -117,18 +117,22 @@ class _NetworkListViewState extends State<NetworkListView> {
             Icon(
               icon,
               size: 64,
-              color: AppColors.contentTertiary,
+              color: context.inspectorColors.contentTertiary,
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
               message,
-              style: const TextStyle(fontSize: 16, color: Colors.grey),
+              style: context.inspectorTypography.body.copyWith(
+                color: context.inspectorColors.contentSecondary,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
               subtitle,
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              style: context.inspectorTypography.caption1.copyWith(
+                color: context.inspectorColors.contentTertiary,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -144,51 +148,49 @@ class _NetworkListViewState extends State<NetworkListView> {
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundPrimary,
+      decoration: BoxDecoration(
+        color: context.inspectorColors.backgroundPrimary,
         border: Border(
           top: BorderSide(
-            color: AppColors.borderDefault,
+            color: context.inspectorColors.borderDefault,
           ),
         ),
       ),
       child: Text(
         count == 1 ? '1 request' : '$count requests',
-        style: InspectorTypography.footnote.copyWith(
-          color: AppColors.contentPrimary,
+        style: context.inspectorTypography.footnote.copyWith(
+          color: context.inspectorColors.contentPrimary,
         ),
         textAlign: TextAlign.center,
       ),
     );
   }
 
- void _showNetworkDetail(NetworkLogUIEntry log) {
-  showDialog<void>(
-    context: context,
-    barrierDismissible: true,
-    builder: (context) {
-      return Align(
-        alignment: Alignment.bottomCenter,
-        child: FractionallySizedBox(
-          heightFactor: 0.9,
-          child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(16),
-            ),
-            child: Material(
-              color: AppColors.surfaceElevated,
-              child: NetworkDetailView(
-                networkLogManager: widget.networkLogManager,
-                logId: log.id,
-                isWebView: true,
-                onClose: () => Navigator.of(context).pop(),
+  void _showNetworkDetail(NetworkLogUIEntry log) {
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return Align(
+          alignment: Alignment.bottomCenter,
+          child: FractionallySizedBox(
+            heightFactor: 0.9,
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppBorderRadius.xl),
+              ),
+              child: Material(
+                color: context.inspectorColors.surfaceElevated,
+                child: NetworkDetailView(
+                  networkLogManager: widget.networkLogManager,
+                  logId: log.id,
+                  isWebView: true,
+                  onClose: () => Navigator.of(context).pop(),
+                ),
               ),
             ),
           ),
-        ),
-      );
-    },
-  );
-}
-
+        );
+      },
+    );
+  }
 }

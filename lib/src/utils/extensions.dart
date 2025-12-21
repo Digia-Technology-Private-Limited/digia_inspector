@@ -1,3 +1,4 @@
+import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -174,27 +175,28 @@ class ClipboardUtils {
     final success = await copyToClipboard(text);
 
     if (context.mounted && success) {
+      final colors = context.inspectorColors;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.check_circle,
-                color: Colors.green,
+                color: colors.statusSuccess,
                 size: 20,
               ),
               const SizedBox(width: 8),
               Text(
                 customMessage ?? 'Copied to clipboard',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: colors.contentPrimary,
                   fontSize: 14,
                 ),
               ),
             ],
           ),
-          backgroundColor: Colors.black87,
+          backgroundColor: colors.backgroundSecondary,
           duration: const Duration(seconds: 2),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(

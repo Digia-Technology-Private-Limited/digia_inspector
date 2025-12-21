@@ -2,19 +2,28 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_monaco/flutter_monaco.dart';
 
+/// Widget for displaying JSON content in a Monaco editor on mobile devices
 class MonacoJsonViewer extends StatefulWidget {
-  final String content;
-  final double? height;
-  final double? width;
-  final bool showCopyButton;
-
+  /// Constructor
   const MonacoJsonViewer({
-    super.key,
     required this.content,
+    super.key,
     this.height,
     this.width,
     this.showCopyButton = true,
   });
+
+  /// The JSON content to display
+  final String content;
+
+  /// The height of the widget
+  final double? height;
+
+  /// The width of the widget
+  final double? width;
+
+  /// Whether to show a copy button
+  final bool showCopyButton;
 
   @override
   State<MonacoJsonViewer> createState() => _MonacoJsonViewerState();
@@ -30,30 +39,24 @@ class _MonacoJsonViewerState extends State<MonacoJsonViewer> {
   }
 
   Future<void> _initEditor() async {
-    String pretty = widget.content;
-    try {
-      final decoded = jsonDecode(widget.content);
-      pretty = const JsonEncoder.withIndent('  ').convert(decoded);
-    } catch (_) {
-    }
+    var pretty = widget.content;
+    final decoded = jsonDecode(widget.content);
+    pretty = const JsonEncoder.withIndent('  ').convert(decoded);
 
     final controller = await MonacoController.create(
       options: const EditorOptions(
-        language: MonacoLanguage.json,
-        theme: MonacoTheme.vs,
-        readOnly: true,
-        minimap: false,
-        fontSize: 12,
-        lineNumbers: false,
-        automaticLayout: true,
-        scrollBeyondLastLine: false,  
-        wordWrap: false,  
-        smoothScrolling: true,  
-        insertSpaces: false,
-        lineHeight: 1.3,   
-        padding: {'top': 8, 'bottom': 8},  
-        contextMenu: false     
-      ),
+          language: MonacoLanguage.json,
+          theme: MonacoTheme.vs,
+          readOnly: true,
+          fontSize: 12,
+          lineNumbers: false,
+          scrollBeyondLastLine: false,
+          wordWrap: false,
+          smoothScrolling: true,
+          insertSpaces: false,
+          lineHeight: 1.3,
+          padding: {'top': 8, 'bottom': 8},
+          contextMenu: false),
     );
 
     await controller.setValue(pretty);

@@ -3,7 +3,6 @@ import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:digia_inspector/src/utils/extensions.dart';
 import 'package:digia_inspector/src/utils/network_utils.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 /// Individual network list item widget
 class NetworkListItem extends StatelessWidget {
@@ -24,10 +23,10 @@ class NetworkListItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.backgroundSecondary,
+        color: context.inspectorColors.backgroundSecondary,
         borderRadius: AppBorderRadius.radiusLG,
         border: Border.all(
-          color: AppColors.borderDefault,
+          color: context.inspectorColors.borderDefault,
         ),
       ),
       child: InkWell(
@@ -38,7 +37,7 @@ class NetworkListItem extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildHeader(),
+              _buildHeader(context),
               const SizedBox(height: AppSpacing.sm),
               _buildMetadata(context),
             ],
@@ -48,19 +47,20 @@ class NetworkListItem extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Row(
       children: [
-        _buildMethodChip(),
+        _buildMethodChip(context),
         const SizedBox(width: AppSpacing.sm),
-        Expanded(child: _buildUrlText()),
-        _buildChevron(),
+        Expanded(child: _buildUrlText(context)),
+        _buildChevron(context),
       ],
     );
   }
 
-  Widget _buildMethodChip() {
-    final color = NetworkLogUtils.getMethodColor(log.method);
+  Widget _buildMethodChip(BuildContext context) {
+    final color =
+        NetworkLogUtils.getMethodColor(log.method, context.inspectorColors);
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -73,100 +73,102 @@ class NetworkListItem extends StatelessWidget {
       ),
       child: Text(
         log.method,
-        style: InspectorTypography.caption1Bold.copyWith(color: color),
+        style: context.inspectorTypography.caption1Bold.copyWith(color: color),
       ),
     );
   }
 
-  Widget _buildUrlText() {
+  Widget _buildUrlText(BuildContext context) {
     final displayName = NetworkLogUtils.getDisplayName(log);
 
     return Text(
       displayName,
-      style: InspectorTypography.callout.copyWith(
-        color: AppColors.contentPrimary,
+      style: context.inspectorTypography.callout.copyWith(
+        color: context.inspectorColors.contentPrimary,
       ),
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
     );
   }
 
-  Widget _buildChevron() {
-    return const Icon(
+  Widget _buildChevron(BuildContext context) {
+    return Icon(
       Icons.chevron_right,
       size: AppIconSizes.md,
-      color: AppColors.chevronColor,
+      color: context.inspectorColors.chevronColor,
     );
   }
 
   Widget _buildMetadata(BuildContext context) {
     return Row(
       children: [
-        _buildTimestamp(),
+        _buildTimestamp(context),
         const SizedBox(width: AppSpacing.md),
         if (log.duration != null) ...[
-          _buildDuration(),
+          _buildDuration(context),
           const SizedBox(width: AppSpacing.md),
         ],
-        _buildSize(),
+        _buildSize(context),
         const Spacer(),
         IconButton(
-          icon: const Icon(Icons.copy,
-              size: 18, color: AppColors.contentSecondary),
+          icon: Icon(Icons.copy,
+              size: 18, color: context.inspectorColors.contentSecondary),
           tooltip: 'Copy as cURL',
           onPressed: () async {
             final curl = NetworkLogUtils.toCurl(log);
             await ClipboardUtils.copyToClipboardWithToast(context, curl);
           },
         ),
-        _buildStatusChip(),
+        _buildStatusChip(context),
       ],
     );
   }
 
-  Widget _buildTimestamp() {
+  Widget _buildTimestamp(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(
+        Icon(
           Icons.schedule,
           size: AppIconSizes.sm,
-          color: AppColors.contentTertiary,
+          color: context.inspectorColors.contentTertiary,
         ),
         const SizedBox(width: AppSpacing.xs),
         Text(
           log.timestamp.networkLogFormat,
-          style: InspectorTypography.footnote.copyWith(
-            color: AppColors.contentSecondary,
+          style: context.inspectorTypography.footnote.copyWith(
+            color: context.inspectorColors.contentSecondary,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildDuration() {
+  Widget _buildDuration(BuildContext context) {
     return Text(
       log.duration!.displayString,
-      style: InspectorTypography.footnote.copyWith(
-        color: AppColors.contentSecondary,
+      style: context.inspectorTypography.footnote.copyWith(
+        color: context.inspectorColors.contentSecondary,
       ),
     );
   }
 
-  Widget _buildSize() {
+  Widget _buildSize(BuildContext context) {
     final sizeText = NetworkLogUtils.getSizeDisplay(log);
 
     return Text(
       sizeText,
-      style: InspectorTypography.footnote.copyWith(
-        color: AppColors.contentSecondary,
+      style: context.inspectorTypography.footnote.copyWith(
+        color: context.inspectorColors.contentSecondary,
       ),
     );
   }
 
-  Widget _buildStatusChip() {
+  Widget _buildStatusChip(BuildContext context) {
     final statusCode = log.statusCode;
     final text = NetworkLogUtils.getStatusDisplayText(statusCode);
+    final color =
+        NetworkLogUtils.getStatusCodeColor(statusCode, context.inspectorColors);
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -174,17 +176,13 @@ class NetworkListItem extends StatelessWidget {
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: statusCode == 200
-            ? AppColors.statusSuccess
-            : statusCode != null && (statusCode >= 400)
-                ? AppColors.statusError
-                : AppColors.contentTertiary,
+        color: color,
         borderRadius: AppBorderRadius.radiusMD,
       ),
       child: Text(
         text,
-        style: InspectorTypography.caption1Bold.copyWith(
-          color: AppColors.backgroundSecondary,
+        style: context.inspectorTypography.caption1Bold.copyWith(
+          color: context.inspectorColors.backgroundSecondary,
         ),
       ),
     );

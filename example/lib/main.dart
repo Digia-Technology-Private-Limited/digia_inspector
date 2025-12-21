@@ -59,47 +59,34 @@ class _MyHomePageState extends State<MyHomePage> {
   void _logStateCreate() {
     // Log state creation using the state observer
     _inspectorController.stateObserver?.onCreate(
-      'counter_state',
-      StateType.component,
+      id: 'counter_state',
+      stateType: StateType.component,
       namespace: 'MyHomePage',
-      args: {'title': widget.title},
-      initialState: {'counter': _counter},
-      metadata: {'created_at': DateTime.now().toIso8601String()},
+      argData: {'title': widget.title},
+      stateData: {'counter': _counter},
     );
   }
 
   void _incrementCounter() {
     setState(() {
-      final previousCounter = _counter;
       _counter++;
-
       // Log the state change using the state observer
       _inspectorController.stateObserver?.onChange(
-        'counter_state',
-        StateType.component,
+        id: 'counter_state',
+        stateType: StateType.component,
         namespace: 'MyHomePage',
-        changes: {'counter': _counter},
-        previousState: {'counter': previousCounter},
-        currentState: {'counter': _counter},
-        metadata: {'changed_at': DateTime.now().toIso8601String()},
+        stateData: {'counter': _counter},
       );
     });
   }
 
   void _simulateAction() {
-    // Create an action log to demonstrate action tracking
-    final actionId = 'increment_${DateTime.now().millisecondsSinceEpoch}';
-    final eventId = 'event_${DateTime.now().millisecondsSinceEpoch}';
-
     final actionLog = ActionLog(
       id: 'log_${DateTime.now().millisecondsSinceEpoch}',
-      eventId: eventId,
-      actionId: actionId,
       actionType: 'CounterIncrement',
       status: ActionStatus.pending,
       timestamp: DateTime.now(),
       category: 'user_action',
-      tags: {'counter', 'increment', 'demo'},
       sourceChain: ['MyHomePage', 'FloatingActionButton'],
       triggerName: 'onPressed',
       actionDefinition: {

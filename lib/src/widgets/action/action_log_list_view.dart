@@ -1,7 +1,5 @@
 import 'package:digia_inspector/src/log_managers/action_log_manager.dart';
-import 'package:digia_inspector/src/theme/app_colors.dart';
-import 'package:digia_inspector/src/theme/app_dimensions.dart';
-import 'package:digia_inspector/src/theme/app_typography.dart';
+import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:digia_inspector/src/widgets/action/action_detail_view.dart';
 import 'package:digia_inspector/src/widgets/action/action_list_item.dart';
 import 'package:digia_inspector_core/digia_inspector_core.dart';
@@ -94,7 +92,7 @@ class _ActionLogListViewState extends State<ActionLogListView> {
   }
 
   Widget _buildEmptyState() {
-    return const Center(
+    return Center(
       child: Padding(
         padding: AppSpacing.paddingXL,
         child: Column(
@@ -103,18 +101,22 @@ class _ActionLogListViewState extends State<ActionLogListView> {
             Icon(
               Icons.play_circle_outline,
               size: 64,
-              color: AppColors.contentTertiary,
+              color: context.inspectorColors.contentTertiary,
             ),
-            SizedBox(height: AppSpacing.md),
+            const SizedBox(height: AppSpacing.md),
             Text(
               'No actions logged',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
+              style: context.inspectorTypography.body.copyWith(
+                color: context.inspectorColors.contentSecondary,
+              ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: AppSpacing.sm),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               'Action logs will appear here when your app performs actions',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+              style: context.inspectorTypography.footnote.copyWith(
+                color: context.inspectorColors.contentSecondary,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -140,11 +142,11 @@ class _ActionLogListViewState extends State<ActionLogListView> {
         horizontal: AppSpacing.md,
         vertical: AppSpacing.sm,
       ),
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundPrimary,
+      decoration: BoxDecoration(
+        color: context.inspectorColors.backgroundPrimary,
         border: Border(
           top: BorderSide(
-            color: AppColors.borderDefault,
+            color: context.inspectorColors.borderDefault,
           ),
         ),
       ),
@@ -152,8 +154,8 @@ class _ActionLogListViewState extends State<ActionLogListView> {
         groupedActions.length == 1
             ? '1 flow • $totalActionCount actions'
             : '${groupedActions.length} flows • $totalActionCount actions',
-        style: InspectorTypography.footnote.copyWith(
-          color: AppColors.contentPrimary,
+        style: context.inspectorTypography.footnote.copyWith(
+          color: context.inspectorColors.contentPrimary,
         ),
         textAlign: TextAlign.center,
       ),

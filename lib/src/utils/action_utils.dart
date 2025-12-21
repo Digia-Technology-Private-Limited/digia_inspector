@@ -4,19 +4,22 @@ import 'package:flutter/material.dart';
 /// Utility class for action log operations and formatting
 abstract class ActionLogUtils {
   /// Gets color for action status
-  static Color getStatusColor(String status) {
+  static Color getStatusColor(
+    String status,
+    InspectorColorsExtension colors,
+  ) {
     switch (status.toLowerCase()) {
       case 'completed':
-        return AppColors.statusSuccess;
+        return colors.statusSuccess;
       case 'error':
       case 'failed':
-        return AppColors.statusError;
+        return colors.statusError;
       case 'running':
-        return AppColors.statusWarning;
+        return colors.statusWarning;
       case 'pending':
-        return AppColors.statusInfo;
+        return colors.statusInfo;
       default:
-        return AppColors.contentTertiary;
+        return colors.contentTertiary;
     }
   }
 
@@ -56,25 +59,28 @@ abstract class ActionLogUtils {
   }
 
   /// Gets color for trigger type
-  static Color getTriggerColor(String trigger) {
+  static Color getTriggerColor(
+    String trigger,
+    InspectorColorsExtension colors,
+  ) {
     switch (trigger.toLowerCase()) {
       case 'onclick':
       case 'click':
-        return AppColors.accent;
+        return colors.accent;
       case 'onsubmit':
       case 'submit':
-        return AppColors.methodPost;
+        return colors.methodPost;
       case 'onchange':
       case 'change':
-        return AppColors.methodPut;
+        return colors.methodPut;
       case 'onload':
       case 'load':
-        return AppColors.methodGet;
+        return colors.methodGet;
       case 'onvalidate':
       case 'validate':
-        return AppColors.statusWarning;
+        return colors.statusWarning;
       default:
-        return AppColors.contentSecondary;
+        return colors.contentSecondary;
     }
   }
 
@@ -110,10 +116,13 @@ abstract class ActionLogUtils {
   }
 
   /// Gets progress color based on progress value
-  static Color getProgressColor(double progress) {
-    if (progress >= 1.0) return AppColors.statusSuccess;
-    if (progress >= 0.5) return AppColors.statusWarning;
-    return AppColors.statusInfo;
+  static Color getProgressColor(
+    double progress,
+    InspectorColorsExtension colors,
+  ) {
+    if (progress >= 1.0) return colors.statusSuccess;
+    if (progress >= 0.5) return colors.statusWarning;
+    return colors.statusInfo;
   }
 
   /// Gets formatted progress text

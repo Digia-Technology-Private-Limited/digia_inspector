@@ -1,17 +1,15 @@
+import 'dart:convert';
+
 import 'package:digia_inspector/src/log_managers/network_log_manager.dart';
 import 'package:digia_inspector/src/models/network_log_ui_entry.dart';
 import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:digia_inspector/src/utils/extensions.dart';
 import 'package:digia_inspector/src/utils/network_utils.dart';
-import 'package:digia_inspector/src/widgets/common/json_view.dart';
-import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
-
 import 'package:digia_inspector/src/widgets/json_viewer/monaco_json_view_stub.dart'
     if (dart.library.js) 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_web.dart'
     if (dart.library.io) 'package:digia_inspector/src/widgets/json_viewer/monaco_json_viewer_mobile.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 /// Widget for displaying detailed network request information
 class NetworkDetailView extends StatefulWidget {
@@ -88,8 +86,8 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
     final log = currentLog;
     if (log == null) {
       return Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceElevated,
+        decoration: BoxDecoration(
+          color: context.inspectorColors.surfaceElevated,
         ),
         child: const Center(
           child: Text('Log not found'),
@@ -105,8 +103,8 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
     }
     if (widget.isWebView) {
       return Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surfaceElevated,
+        decoration: BoxDecoration(
+          color: context.inspectorColors.surfaceElevated,
         ),
         child: Column(
           children: [
@@ -134,9 +132,9 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
       maxChildSize: 0.95,
       builder: (context, scrollController) {
         return Container(
-          decoration: const BoxDecoration(
-            color: AppColors.surfaceElevated,
-            borderRadius: BorderRadius.only(
+          decoration: BoxDecoration(
+            color: context.inspectorColors.surfaceElevated,
+            borderRadius: const BorderRadius.only(
               topLeft: Radius.circular(AppBorderRadius.xl),
               topRight: Radius.circular(AppBorderRadius.xl),
             ),
@@ -167,16 +165,12 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
   Widget _buildHeader(NetworkLogUIEntry log) {
     final displayName = NetworkLogUtils.getDisplayName(log);
 
-    final statusText = log.statusCode != null
-        ? NetworkLogUtils.getStatusWithDescription(log.statusCode)
-        : (log.isPending ? 'Loading...' : '');
-
     return Container(
       padding: AppSpacing.paddingMD,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: AppColors.borderDefault,
+            color: context.inspectorColors.borderDefault,
             width: 0.5,
           ),
         ),
@@ -189,7 +183,7 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.contentTertiary,
+                color: context.inspectorColors.contentTertiary,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -198,10 +192,10 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
           // Title row
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.language,
                 size: AppIconSizes.md,
-                color: AppColors.accent,
+                color: context.inspectorColors.accent,
               ),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
@@ -212,19 +206,21 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
                       children: [
                         Text(
                           '${log.method}: $displayName',
-                          style: InspectorTypography.headline.copyWith(
+                          style: context.inspectorTypography.headline.copyWith(
                             fontSize: 16,
-                            color: AppColors.contentPrimary,
+                            color: context.inspectorColors.contentPrimary,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.copy,
-                              size: 18, color: AppColors.contentSecondary),
+                          icon: Icon(Icons.copy,
+                              size: 18,
+                              color: context.inspectorColors.contentSecondary),
                           tooltip: 'Copy as cURL',
                           onPressed: () async {
                             final curl = NetworkLogUtils.toCurl(log);
-                            await ClipboardUtils.copyToClipboardWithToast(context, curl);
+                            await ClipboardUtils.copyToClipboardWithToast(
+                                context, curl);
                           },
                         ),
                       ],
@@ -240,9 +236,9 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
                     Navigator.pop(context);
                   }
                 },
-                icon: const Icon(
+                icon: Icon(
                   Icons.close,
-                  color: AppColors.contentPrimary,
+                  color: context.inspectorColors.contentPrimary,
                 ),
               ),
             ],
@@ -266,15 +262,15 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
         isScrollable: true,
         physics: const NeverScrollableScrollPhysics(),
         controller: _tabController,
-        indicator: const BoxDecoration(
-          color: AppColors.backgroundTertiary,
+        indicator: BoxDecoration(
+          color: context.inspectorColors.backgroundTertiary,
           borderRadius: AppBorderRadius.radiusXXL,
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
-        labelColor: AppColors.contentPrimary,
-        unselectedLabelColor: AppColors.contentSecondary,
-        labelStyle: InspectorTypography.subheadBold,
+        labelColor: context.inspectorColors.contentPrimary,
+        unselectedLabelColor: context.inspectorColors.contentSecondary,
+        labelStyle: context.inspectorTypography.subheadBold,
         overlayColor: WidgetStateProperty.all(Colors.transparent),
         splashFactory: NoSplash.splashFactory,
         labelPadding: const EdgeInsets.symmetric(
@@ -395,7 +391,7 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
-          color: AppColors.separator,
+          color: context.inspectorColors.separator,
         ),
         borderRadius: AppBorderRadius.radiusMD,
       ),
@@ -405,22 +401,22 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
           initiallyExpanded: initiallyExpanded,
           title: Text(
             '$title ($count)',
-            style: InspectorTypography.subheadBold.copyWith(
-              color: AppColors.contentPrimary,
+            style: context.inspectorTypography.subheadBold.copyWith(
+              color: context.inspectorColors.contentPrimary,
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
           ),
-          iconColor: AppColors.contentPrimary,
-          collapsedIconColor: AppColors.contentSecondary,
+          iconColor: context.inspectorColors.contentPrimary,
+          collapsedIconColor: context.inspectorColors.contentSecondary,
           children: [
             if (headers.isEmpty)
               Padding(
                 padding: AppSpacing.paddingMD,
                 child: Text(
                   'No headers',
-                  style: InspectorTypography.subhead.copyWith(
-                    color: AppColors.contentTertiary,
+                  style: context.inspectorTypography.subhead.copyWith(
+                    color: context.inspectorColors.contentTertiary,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -443,7 +439,8 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
     Color? statusColor;
 
     if (isStatusCode && log.statusCode != null) {
-      statusColor = NetworkLogUtils.getStatusCodeColor(log.statusCode);
+      statusColor = NetworkLogUtils.getStatusCodeColor(
+          log.statusCode, context.inspectorColors);
     }
 
     return Padding(
@@ -458,8 +455,8 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
             flex: 2,
             child: Text(
               key,
-              style: InspectorTypography.footnote.copyWith(
-                color: AppColors.contentSecondary,
+              style: context.inspectorTypography.footnote.copyWith(
+                color: context.inspectorColors.contentSecondary,
               ),
             ),
           ),
@@ -481,8 +478,8 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
                 Expanded(
                   child: SelectableText(
                     value,
-                    style: InspectorTypography.footnote.copyWith(
-                      color: AppColors.contentPrimary,
+                    style: context.inspectorTypography.footnote.copyWith(
+                      color: context.inspectorColors.contentPrimary,
                     ),
                   ),
                 ),
@@ -502,7 +499,7 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
     if (content is String) {
       try {
         value = NetworkLogUtils.tryDecodeJson(content) ?? content;
-      } catch (_) {
+      } on Exception catch (_) {
         value = content;
       }
     }
@@ -519,8 +516,8 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
       children: [
         Text(
           title,
-          style: InspectorTypography.subheadBold.copyWith(
-            color: AppColors.contentPrimary,
+          style: context.inspectorTypography.subheadBold.copyWith(
+            color: context.inspectorColors.contentPrimary,
           ),
         ),
         const SizedBox(height: AppSpacing.xs),
@@ -538,9 +535,9 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
     return Container(
       padding: AppSpacing.paddingMD,
       decoration: BoxDecoration(
-        color: AppColors.statusError.withValues(alpha: 0.1),
+        color: context.inspectorColors.statusError.withValues(alpha: 0.1),
         border: Border.all(
-          color: AppColors.statusError,
+          color: context.inspectorColors.statusError,
         ),
         borderRadius: AppBorderRadius.radiusMD,
       ),
@@ -549,16 +546,16 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.error,
-                color: AppColors.statusError,
+                color: context.inspectorColors.statusError,
                 size: AppIconSizes.md,
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(
                 'Error Details',
-                style: InspectorTypography.subheadBold.copyWith(
-                  color: AppColors.statusError,
+                style: context.inspectorTypography.subheadBold.copyWith(
+                  color: context.inspectorColors.statusError,
                 ),
               ),
             ],
@@ -566,8 +563,8 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
           const SizedBox(height: AppSpacing.sm),
           SelectableText(
             log.error.toString(),
-            style: InspectorTypography.subhead.copyWith(
-              color: AppColors.contentPrimary,
+            style: context.inspectorTypography.subhead.copyWith(
+              color: context.inspectorColors.contentPrimary,
             ),
           ),
         ],
@@ -582,16 +579,16 @@ class _NetworkDetailViewState extends State<NetworkDetailView>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
+            Icon(
               Icons.inbox,
               size: 48,
-              color: AppColors.contentTertiary,
+              color: context.inspectorColors.contentTertiary,
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
               message,
-              style: InspectorTypography.subhead.copyWith(
-                color: AppColors.contentSecondary,
+              style: context.inspectorTypography.subhead.copyWith(
+                color: context.inspectorColors.contentSecondary,
               ),
               textAlign: TextAlign.center,
             ),

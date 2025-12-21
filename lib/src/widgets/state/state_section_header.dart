@@ -52,15 +52,15 @@ class StateSectionHeader extends StatelessWidget {
             Icon(
               icon,
               size: AppIconSizes.md,
-              color: AppColors.contentPrimary,
+              color: context.inspectorColors.contentPrimary,
             ),
             const SizedBox(width: AppSpacing.sm),
             title,
             const SizedBox(width: AppSpacing.sm),
             Text(
               '$variableCount variable${variableCount != 1 ? 's' : ''}',
-              style: InspectorTypography.subhead.copyWith(
-                color: AppColors.contentSecondary,
+              style: context.inspectorTypography.subhead.copyWith(
+                color: context.inspectorColors.contentSecondary,
               ),
             ),
             if (showUpdatedBadge) ...[
@@ -71,14 +71,13 @@ class StateSectionHeader extends StatelessWidget {
                   vertical: 2,
                 ),
                 decoration: BoxDecoration(
-                  // Use withValues instead of deprecated withOpacity
-                  color: AppColors.accent.withValues(alpha: 0.12),
+                  color: context.inspectorColors.accent.withValues(alpha: 0.12),
                   borderRadius: AppBorderRadius.radiusSM,
                 ),
                 child: Text(
                   'Updated just now',
-                  style: InspectorTypography.caption1.copyWith(
-                    color: AppColors.accent,
+                  style: context.inspectorTypography.caption1.copyWith(
+                    color: context.inspectorColors.accent,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -88,7 +87,7 @@ class StateSectionHeader extends StatelessWidget {
             Icon(
               isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
               size: AppIconSizes.sm,
-              color: AppColors.contentPrimary,
+              color: context.inspectorColors.contentPrimary,
             ),
           ],
         ),

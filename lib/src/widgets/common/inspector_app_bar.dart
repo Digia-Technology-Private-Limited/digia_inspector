@@ -1,6 +1,4 @@
-import 'package:digia_inspector/src/theme/app_colors.dart';
-import 'package:digia_inspector/src/theme/app_dimensions.dart';
-import 'package:digia_inspector/src/theme/app_typography.dart';
+import 'package:digia_inspector/src/theme/theme_system.dart';
 import 'package:flutter/material.dart';
 
 /// Common app bar for inspector console with back button and clear logs action
@@ -33,11 +31,11 @@ class InspectorAppBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: AppSpacing.paddingSM,
-      decoration: const BoxDecoration(
-        color: AppColors.backgroundSecondary,
+      decoration: BoxDecoration(
+        color: context.inspectorColors.backgroundSecondary,
         border: Border(
           bottom: BorderSide(
-            color: AppColors.separator,
+            color: context.inspectorColors.separator,
             width: 0.5,
           ),
         ),
@@ -47,18 +45,18 @@ class InspectorAppBar extends StatelessWidget {
           if (showBackButton && onBack != null)
             IconButton(
               onPressed: onBack,
-              icon: const Icon(
+              icon: Icon(
                 Icons.arrow_back_ios,
-                color: AppColors.contentPrimary,
+                color: context.inspectorColors.contentPrimary,
               ),
             )
           else if (showBackButton) ...[
             const SizedBox(width: AppSpacing.sm),
             Text(
               'Inspector',
-              style: InspectorTypography.headline.copyWith(
+              style: context.inspectorTypography.headline.copyWith(
                 fontSize: 16,
-                color: AppColors.contentPrimary,
+                color: context.inspectorColors.contentPrimary,
                 fontWeight: FontWeight.w600,
               ),
               textAlign: TextAlign.left,
@@ -68,9 +66,9 @@ class InspectorAppBar extends StatelessWidget {
           if (onClearLogs != null)
             IconButton(
               onPressed: () => onClearLogs!(currentTabIndex),
-              icon: const Icon(
+              icon: Icon(
                 Icons.delete_outline,
-                color: AppColors.contentPrimary,
+                color: context.inspectorColors.contentPrimary,
               ),
             )
           else

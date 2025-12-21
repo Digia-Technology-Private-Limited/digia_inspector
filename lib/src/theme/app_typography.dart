@@ -1,160 +1,183 @@
+import 'package:digia_inspector/src/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
-/// Typography constants for DigiaInspector
-abstract class InspectorTypography {
-  /// Base font
+/// Typography factory for DigiaInspector
+///
+/// Access via `context.inspectorTypography`
+class InspectorTypography {
+  InspectorTypography._(this._context);
+  final BuildContext _context;
+
+  InspectorColorsExtension get _colors => _context.inspectorColors;
+
+  /// The font family for the text
   static const String fontFamily = 'SF Pro Text';
 
-  /// Large Title - Used for main titles
-  static const largeTitle = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 34,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0.37,
-    height: 1.18,
-  );
+  /// The font family for the monospace text
+  static const String monoFontFamily = 'SF Mono';
 
-  /// Title 1 - Section headers
-  static const title1 = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 28,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0.36,
-    height: 1.21,
-  );
+  TextStyle _base({
+    required double fontSize,
+    required FontWeight fontWeight,
+    required double letterSpacing,
+    required double height,
+    Color? color,
+  }) {
+    return TextStyle(
+      fontFamily: fontFamily,
+      fontSize: fontSize,
+      fontWeight: fontWeight,
+      letterSpacing: letterSpacing,
+      height: height,
+      color: color ?? _colors.contentPrimary,
+    );
+  }
 
-  /// Title 2 - Subsection headers
-  static const title2 = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 22,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0.35,
-    height: 1.27,
-  );
+  /// The style for the large title
+  TextStyle get largeTitle => _base(
+        fontSize: 34,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0.37,
+        height: 1.18,
+      );
 
-  /// Title 3 - Card headers
-  static const title3 = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 20,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0.38,
-    height: 1.20,
-  );
+  /// The style for the title 1
+  TextStyle get title1 => _base(
+        fontSize: 28,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0.36,
+        height: 1.21,
+      );
 
-  /// Headline - Important content
-  static const headline = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
-    letterSpacing: -0.41,
-    height: 1.29,
-  );
+  /// The style for the title 2
+  TextStyle get title2 => _base(
+        fontSize: 22,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0.35,
+        height: 1.27,
+      );
 
-  /// Body - Main content text
-  static const body = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 17,
-    fontWeight: FontWeight.w400,
-    letterSpacing: -0.41,
-    height: 1.29,
-  );
+  /// The style for the title 3
+  TextStyle get title3 => _base(
+        fontSize: 20,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0.38,
+        height: 1.20,
+      );
 
-  /// Callout - Secondary content
-  static const callout = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 16,
-    fontWeight: FontWeight.w400,
-    letterSpacing: -0.32,
-    height: 1.31,
-  );
+  /// The style for the headline
+  TextStyle get headline => _base(
+        fontSize: 17,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.41,
+        height: 1.29,
+      );
 
-  /// Subhead - List items, descriptions
-  static const subhead = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 15,
-    fontWeight: FontWeight.w400,
-    letterSpacing: -0.24,
-    height: 1.33,
-  );
+  /// The style for the body
+  TextStyle get body => _base(
+        fontSize: 17,
+        fontWeight: FontWeight.w400,
+        letterSpacing: -0.41,
+        height: 1.29,
+      );
 
-  /// Footnote - Timestamps, metadata
-  static const footnote = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 13,
-    fontWeight: FontWeight.w400,
-    letterSpacing: -0.08,
-    height: 1.38,
-  );
+  /// The style for the callout
+  TextStyle get callout => _base(
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        letterSpacing: -0.32,
+        height: 1.31,
+      );
 
-  /// Caption 1 - Small labels
-  static const caption1 = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 12,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0,
-    height: 1.33,
-  );
+  /// The style for the subhead
+  TextStyle get subhead => _base(
+        fontSize: 15,
+        fontWeight: FontWeight.w400,
+        letterSpacing: -0.24,
+        height: 1.33,
+      );
 
-  /// Caption 2 - Very small text
-  static const caption2 = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 11,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0.07,
-    height: 1.36,
-  );
+  /// The style for the footnote
+  TextStyle get footnote => _base(
+        fontSize: 13,
+        fontWeight: FontWeight.w400,
+        letterSpacing: -0.08,
+        height: 1.38,
+      );
 
-  /// Monospace - Code/JSON display
-  static const monospace = TextStyle(
-    fontFamily: 'SF Mono',
-    fontSize: 13,
-    fontWeight: FontWeight.w400,
-    letterSpacing: 0,
-    height: 1.38,
-  );
+  /// The style for the caption 1
+  TextStyle get caption1 => _base(
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0,
+        height: 1.33,
+      );
 
-  /// Bold variants
-  static const headlineBold = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 17,
-    fontWeight: FontWeight.w700,
-    letterSpacing: -0.41,
-    height: 1.29,
-  );
+  /// The style for the caption 2
+  TextStyle get caption2 => _base(
+        fontSize: 11,
+        fontWeight: FontWeight.w400,
+        letterSpacing: 0.07,
+        height: 1.36,
+      );
 
-  /// Callout bold
-  static const calloutBold = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 16,
-    fontWeight: FontWeight.w500,
-    letterSpacing: -0.32,
-    height: 1.31,
-  );
+  /// The style for the monospace
+  TextStyle get monospace {
+    return TextStyle(
+      fontFamily: monoFontFamily,
+      fontSize: 13,
+      fontWeight: FontWeight.w400,
+      letterSpacing: 0,
+      height: 1.38,
+      color: _colors.contentPrimary,
+    );
+  }
 
-  /// Subhead bold
-  static const subheadBold = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 15,
-    fontWeight: FontWeight.w500,
-    letterSpacing: -0.24,
-    height: 1.33,
-  );
+  // Bold variants
 
-  /// Footnote bold
-  static const footnoteBold = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 13,
-    fontWeight: FontWeight.w500,
-    letterSpacing: -0.08,
-    height: 1.38,
-  );
+  /// The style for the headline bold
+  TextStyle get headlineBold => _base(
+        fontSize: 17,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.41,
+        height: 1.29,
+      );
 
-  /// Caption 1 bold
-  static const caption1Bold = TextStyle(
-    fontFamily: fontFamily,
-    fontSize: 12,
-    fontWeight: FontWeight.w500,
-    letterSpacing: 0,
-    height: 1.33,
-  );
+  /// The style for the callout bold
+  TextStyle get calloutBold => _base(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.32,
+        height: 1.31,
+      );
+
+  /// The style for the subhead bold
+  TextStyle get subheadBold => _base(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.24,
+        height: 1.33,
+      );
+
+  /// The style for the footnote bold
+  TextStyle get footnoteBold => _base(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.08,
+        height: 1.38,
+      );
+
+  /// The style for the caption 1 bold
+  TextStyle get caption1Bold => _base(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0,
+        height: 1.33,
+      );
+}
+
+/// Extension for easy access to the inspector typography
+extension InspectorTypographyGetter on BuildContext {
+  /// The inspector typography
+  InspectorTypography get inspectorTypography => InspectorTypography._(this);
 }

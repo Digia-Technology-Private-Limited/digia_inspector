@@ -8,15 +8,13 @@ import 'package:flutter/material.dart';
 
 /// Utilities for working with network logs and HTTP data
 class NetworkLogUtils {
-
   ///cURL generator pass log HERE
   static String toCurl(NetworkLogUIEntry entry) {
     final method = entry.method;
     final url = entry.url.toString();
     final headers = entry.requestHeaders;
     final body = entry.requestBody;
-    final buffer = StringBuffer('curl -X $method');
-    buffer.write(' "$url"');
+    final buffer = StringBuffer('curl -X $method')..write(' "$url"');
     headers.forEach((key, value) {
       buffer.write(' -H "$key: $value"');
     });
@@ -25,32 +23,39 @@ class NetworkLogUtils {
     }
     return buffer.toString();
   }
+
   /// Gets the appropriate color for an HTTP method
-  static Color getMethodColor(String method) {
+  static Color getMethodColor(
+    String method,
+    InspectorColorsExtension colors,
+  ) {
     switch (method.toUpperCase()) {
       case 'GET':
-        return AppColors.methodGet;
+        return colors.methodGet;
       case 'POST':
-        return AppColors.methodPost;
+        return colors.methodPost;
       case 'PUT':
-        return AppColors.methodPut;
+        return colors.methodPut;
       default:
-        return AppColors.contentSecondary;
+        return colors.contentSecondary;
     }
   }
 
   /// Gets the appropriate color for a status code
-  static Color getStatusCodeColor(int? statusCode) {
-    if (statusCode == null) return AppColors.contentSecondary;
+  static Color getStatusCodeColor(
+    int? statusCode,
+    InspectorColorsExtension colors,
+  ) {
+    if (statusCode == null) return colors.contentSecondary;
 
     if (statusCode.isSuccess) {
-      return AppColors.statusSuccess;
+      return colors.statusSuccess;
     } else if (statusCode.isRedirection) {
-      return AppColors.statusWarning;
+      return colors.statusWarning;
     } else if (statusCode.isClientError || statusCode.isServerError) {
-      return AppColors.statusError;
+      return colors.statusError;
     } else {
-      return AppColors.statusInfo;
+      return colors.statusInfo;
     }
   }
 

@@ -77,9 +77,9 @@ class _InspectorWebConsoleState extends State<InspectorWebConsole>
       height: widget.height,
       width: widget.width ?? double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.backgroundSecondary,
+        color: context.inspectorColors.backgroundSecondary,
         border: Border.all(
-          color: AppColors.separator,
+          color: context.inspectorColors.separator,
         ),
         borderRadius: AppBorderRadius.radiusLG,
         boxShadow: AppElevation.cardShadow,

@@ -51,7 +51,7 @@ class _InspectorSearchBarState extends State<InspectorSearchBar> {
   Widget build(BuildContext context) {
     return Container(
       padding: AppSpacing.paddingMD,
-      color: AppColors.backgroundSecondary,
+      color: context.inspectorColors.backgroundSecondary,
       child: Row(
         children: [
           Expanded(child: _buildSearchField()),
@@ -65,23 +65,23 @@ class _InspectorSearchBarState extends State<InspectorSearchBar> {
   Widget _buildSearchField() {
     return Container(
       height: 36,
-      decoration: const BoxDecoration(
-        color: AppColors.searchBackground,
+      decoration: BoxDecoration(
+        color: context.inspectorColors.searchBackground,
         borderRadius: AppBorderRadius.radiusMD,
       ),
       child: TextField(
         controller: _controller,
-        style: InspectorTypography.subhead.copyWith(
-          color: AppColors.contentPrimary,
+        style: context.inspectorTypography.subhead.copyWith(
+          color: context.inspectorColors.contentPrimary,
         ),
         decoration: InputDecoration(
           hintText: widget.hintText,
-          hintStyle: InspectorTypography.subhead.copyWith(
-            color: AppColors.contentPlaceholder,
+          hintStyle: context.inspectorTypography.subhead.copyWith(
+            color: context.inspectorColors.contentPlaceholder,
           ),
-          prefixIcon: const Icon(
+          prefixIcon: Icon(
             Icons.search,
-            color: AppColors.contentTertiary,
+            color: context.inspectorColors.contentTertiary,
             size: AppIconSizes.md,
           ),
           contentPadding: const EdgeInsets.symmetric(
@@ -100,8 +100,8 @@ class _InspectorSearchBarState extends State<InspectorSearchBar> {
       height: 36,
       decoration: BoxDecoration(
         color: widget.hasActiveFilter
-            ? AppColors.accent.withValues(alpha: 0.1)
-            : AppColors.searchBackground,
+            ? context.inspectorColors.accent.withValues(alpha: 0.1)
+            : context.inspectorColors.searchBackground,
         borderRadius: AppBorderRadius.radiusMD,
       ),
       child: InkWell(
@@ -113,8 +113,8 @@ class _InspectorSearchBarState extends State<InspectorSearchBar> {
             Icon(
               Icons.tune,
               color: widget.hasActiveFilter
-                  ? AppColors.accent
-                  : AppColors.contentTertiary,
+                  ? context.inspectorColors.accent
+                  : context.inspectorColors.contentTertiary,
               size: AppIconSizes.md,
             ),
             if (widget.hasActiveFilter)
@@ -124,8 +124,8 @@ class _InspectorSearchBarState extends State<InspectorSearchBar> {
                 child: Container(
                   width: 8,
                   height: 8,
-                  decoration: const BoxDecoration(
-                    color: AppColors.accent,
+                  decoration: BoxDecoration(
+                    color: context.inspectorColors.accent,
                     shape: BoxShape.circle,
                   ),
                 ),

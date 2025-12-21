@@ -4,9 +4,9 @@ import 'package:digia_inspector/src/theme/app_dimensions.dart';
 import 'package:digia_inspector/src/theme/app_typography.dart';
 import 'package:digia_inspector/src/utils/action_utils.dart';
 import 'package:digia_inspector/src/utils/extensions.dart';
+import 'package:digia_inspector/src/widgets/common/json_view.dart';
 import 'package:digia_inspector_core/digia_inspector_core.dart';
 import 'package:flutter/material.dart';
-import 'package:digia_inspector/src/widgets/common/json_view.dart';
 
 /// Widget for displaying individual action items with full details
 class ActionItem extends StatefulWidget {
@@ -74,10 +74,10 @@ class _ActionItemState extends State<ActionItem> {
           Container(
             margin: const EdgeInsets.only(left: AppSpacing.lg),
             decoration: BoxDecoration(
-              color: AppColors.backgroundSecondary,
+              color: context.inspectorColors.backgroundSecondary,
               borderRadius: AppBorderRadius.radiusLG,
               border: Border.all(
-                color: AppColors.borderDefault,
+                color: context.inspectorColors.borderDefault,
               ),
             ),
             child: InkWell(
@@ -106,10 +106,10 @@ class _ActionItemState extends State<ActionItem> {
     // For parent items, no margin or indicator
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.backgroundSecondary,
+        color: context.inspectorColors.backgroundSecondary,
         borderRadius: AppBorderRadius.radiusLG,
         border: Border.all(
-          color: AppColors.borderDefault,
+          color: context.inspectorColors.borderDefault,
         ),
       ),
       child: InkWell(
@@ -157,16 +157,16 @@ class _ActionItemState extends State<ActionItem> {
         vertical: 4,
       ),
       decoration: BoxDecoration(
-        color: AppColors.accent,
+        color: context.inspectorColors.accent,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.accent,
+          color: context.inspectorColors.accent,
         ),
       ),
       child: Text(
         triggerName ?? 'Unknown',
-        style: InspectorTypography.caption2.copyWith(
-          color: AppColors.backgroundSecondary,
+        style: context.inspectorTypography.caption2.copyWith(
+          color: context.inspectorColors.backgroundSecondary,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -178,16 +178,16 @@ class _ActionItemState extends State<ActionItem> {
       width: 20,
       height: 20,
       decoration: BoxDecoration(
-        color: AppColors.backgroundSecondary,
+        color: context.inspectorColors.backgroundSecondary,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: AppColors.contentTertiary,
+          color: context.inspectorColors.contentTertiary,
         ),
       ),
-      child: const Icon(
+      child: Icon(
         Icons.subdirectory_arrow_right,
         size: AppIconSizes.xs,
-        color: AppColors.contentTertiary,
+        color: context.inspectorColors.contentTertiary,
       ),
     );
   }
@@ -195,6 +195,7 @@ class _ActionItemState extends State<ActionItem> {
   Widget _buildStatusIndicator(ActionLog currentAction) {
     final statusColor = ActionLogUtils.getStatusColor(
       currentAction.status.name,
+      context.inspectorColors,
     );
     final statusIcon = ActionLogUtils.getStatusIcon(currentAction.status.name);
 
@@ -225,8 +226,8 @@ class _ActionItemState extends State<ActionItem> {
             Expanded(
               child: Text(
                 currentAction.actionType,
-                style: InspectorTypography.callout.copyWith(
-                  color: AppColors.contentPrimary,
+                style: context.inspectorTypography.callout.copyWith(
+                  color: context.inspectorColors.contentPrimary,
                   fontWeight: FontWeight.w500,
                 ),
                 maxLines: 1,
@@ -241,15 +242,15 @@ class _ActionItemState extends State<ActionItem> {
                   vertical: 2,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.searchBackground,
+                  color: context.inspectorColors.searchBackground,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   ActionLogUtils.formatExecutionTime(
                     currentAction.executionTime,
                   ),
-                  style: InspectorTypography.caption1.copyWith(
-                    color: AppColors.contentSecondary,
+                  style: context.inspectorTypography.caption1.copyWith(
+                    color: context.inspectorColors.contentSecondary,
                   ),
                 ),
               ),
@@ -259,31 +260,31 @@ class _ActionItemState extends State<ActionItem> {
         const SizedBox(height: 2),
         Row(
           children: [
-            const Icon(
+            Icon(
               Icons.schedule,
               size: AppIconSizes.xs,
-              color: AppColors.contentTertiary,
+              color: context.inspectorColors.contentTertiary,
             ),
             const SizedBox(width: 2),
             Text(
               currentAction.timestamp.networkLogFormat,
-              style: InspectorTypography.footnote.copyWith(
-                color: AppColors.contentSecondary,
+              style: context.inspectorTypography.footnote.copyWith(
+                color: context.inspectorColors.contentSecondary,
               ),
             ),
             if (currentAction.sourceChain?.isNotEmpty ?? false) ...[
               const SizedBox(width: AppSpacing.sm),
-              const Icon(
+              Icon(
                 Icons.link,
                 size: AppIconSizes.xs,
-                color: AppColors.contentTertiary,
+                color: context.inspectorColors.contentTertiary,
               ),
               const SizedBox(width: 2),
               Expanded(
                 child: Text(
                   currentAction.sourceChain?.last ?? 'Unknown',
-                  style: InspectorTypography.footnote.copyWith(
-                    color: AppColors.contentSecondary,
+                  style: context.inspectorTypography.footnote.copyWith(
+                    color: context.inspectorColors.contentSecondary,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -300,18 +301,19 @@ class _ActionItemState extends State<ActionItem> {
               vertical: 2,
             ),
             decoration: BoxDecoration(
-              color: AppColors.statusError.withValues(alpha: 0.1),
+              color: context.inspectorColors.statusError.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(4),
               border: Border.all(
-                color: AppColors.statusError.withValues(alpha: 0.3),
+                color:
+                    context.inspectorColors.statusError.withValues(alpha: 0.3),
               ),
             ),
             child: Text(
               currentAction.errorMessage!.length > 50
                   ? '${currentAction.errorMessage!.substring(0, 50)}...'
                   : currentAction.errorMessage!,
-              style: InspectorTypography.caption1.copyWith(
-                color: AppColors.statusError,
+              style: context.inspectorTypography.caption1.copyWith(
+                color: context.inspectorColors.statusError,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -326,7 +328,7 @@ class _ActionItemState extends State<ActionItem> {
     return Icon(
       _isExpanded ? Icons.expand_less : Icons.expand_more,
       size: AppIconSizes.md,
-      color: AppColors.contentTertiary,
+      color: context.inspectorColors.contentTertiary,
     );
   }
 
@@ -372,8 +374,8 @@ class _ActionItemState extends State<ActionItem> {
         children: [
           Text(
             title,
-            style: InspectorTypography.subheadBold.copyWith(
-              color: AppColors.contentSecondary,
+            style: context.inspectorTypography.subheadBold.copyWith(
+              color: context.inspectorColors.contentSecondary,
             ),
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -381,10 +383,10 @@ class _ActionItemState extends State<ActionItem> {
             width: double.infinity,
             padding: AppSpacing.paddingMD,
             decoration: BoxDecoration(
-              color: AppColors.searchBackground,
+              color: context.inspectorColors.searchBackground,
               borderRadius: AppBorderRadius.radiusSM,
               border: Border.all(
-                color: AppColors.separator,
+                color: context.inspectorColors.separator,
                 width: 0.5,
               ),
             ),
@@ -401,5 +403,4 @@ class _ActionItemState extends State<ActionItem> {
       inline: true,
     );
   }
-  
 }
