@@ -71,13 +71,13 @@ class ActionFlowListItem extends StatelessWidget {
         vertical: AppSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: context.inspectorColors.surfacePressed,
+        color: context.inspectorColors.backgroundSecondary,
         borderRadius: AppBorderRadius.radiusSM,
       ),
       child: Text(
         flow.triggerName ?? 'Unknown',
         style: context.inspectorTypography.caption1Bold.copyWith(
-          color: context.inspectorColors.accent,
+          color: context.inspectorColors.contentPrimary,
         ),
       ),
     );

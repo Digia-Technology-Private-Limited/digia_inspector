@@ -58,32 +58,6 @@ abstract class ActionLogUtils {
     }
   }
 
-  /// Gets color for trigger type
-  static Color getTriggerColor(
-    String trigger,
-    InspectorColorsExtension colors,
-  ) {
-    switch (trigger.toLowerCase()) {
-      case 'onclick':
-      case 'click':
-        return colors.accent;
-      case 'onsubmit':
-      case 'submit':
-        return colors.methodPost;
-      case 'onchange':
-      case 'change':
-        return colors.methodPut;
-      case 'onload':
-      case 'load':
-        return colors.methodGet;
-      case 'onvalidate':
-      case 'validate':
-        return colors.statusWarning;
-      default:
-        return colors.contentSecondary;
-    }
-  }
-
   /// Formats execution time for display
   static String formatExecutionTime(Duration? duration) {
     if (duration == null) return '';

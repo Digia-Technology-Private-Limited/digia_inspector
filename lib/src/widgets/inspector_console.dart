@@ -44,13 +44,13 @@ class InspectorConsole extends StatelessWidget {
   /// Width of the console (web only)
   final double? width;
 
-  /// Theme mode for the inspector (Defaults to system)
+  /// Theme mode for the inspector (Defaults to light)
   final ThemeMode? themeMode;
 
   @override
   Widget build(BuildContext context) {
     // Determine brightness
-    final effectiveThemeMode = themeMode ?? ThemeMode.system;
+    final effectiveThemeMode = themeMode ?? ThemeMode.light;
     final platformBrightness = MediaQuery.platformBrightnessOf(context);
     final brightness = effectiveThemeMode == ThemeMode.system
         ? platformBrightness

@@ -157,16 +157,16 @@ class _ActionItemState extends State<ActionItem> {
         vertical: 4,
       ),
       decoration: BoxDecoration(
-        color: context.inspectorColors.accent,
+        color: context.inspectorColors.backgroundSecondary,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: context.inspectorColors.accent,
+          color: context.inspectorColors.borderDefault,
         ),
       ),
       child: Text(
         triggerName ?? 'Unknown',
         style: context.inspectorTypography.caption2.copyWith(
-          color: context.inspectorColors.backgroundSecondary,
+          color: context.inspectorColors.contentPrimary,
           fontWeight: FontWeight.w500,
         ),
       ),
